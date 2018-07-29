@@ -48,8 +48,9 @@ import java.lang.reflect.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DataTreeTest extends ZKTestCase {
     protected static final Logger LOG = LoggerFactory.getLogger(DataTreeTest.class);
@@ -64,6 +65,45 @@ public class DataTreeTest extends ZKTestCase {
     @After
     public void tearDown() throws Exception {
         dt=null;
+    }
+
+    /**
+     * Test ZOOKEEPER-3102: Potential race condition when create ephemeral nodes.
+     */
+    @Test(timeout = 60000)
+    public void testSessionEphemeralNodesConcurrentlyCreated()
+            throws InterruptedException, NodeExistsException, NoNodeException {
+        long session = 0x1234;
+        int concurrent = 10000;
+        Thread[] threads = new Thread[concurrent];
+        CountDownLatch latch = new CountDownLatch(1);
+        for (int i = 0; i < concurrent; i++) {
+            String parent = "/test" + i;
+            dt.createNode(parent, new byte[0], null, 0, -1, 1, 1);
+
+            Thread thread = new Thread(() -> {
+                try {
+                    latch.await();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                String path = parent + "/0";
+                try {
+                    dt.createNode(path, new byte[0], null, session, -1, 1, 1);
+                } catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
+            });
+            thread.start();
+            threads[i] = thread;
+        }
+        latch.countDown();
+        for (Thread thread : threads) {
+            thread.join();
+        }
+        int sessionEphemerals = dt.getEphemerals(session).size();
+        Assert.assertEquals(concurrent, sessionEphemerals);
     }
 
     /**
@@ -280,5 +320,36 @@ public class DataTreeTest extends ZKTestCase {
         Assert.assertEquals(
             "expected to have the same acl", ZooDefs.Ids.OPEN_ACL_UNSAFE,
             tree.getACL("/bug", new Stat()));
+    }
+    
+    @Test(timeout = 60000)
+    public void testFuckSessionEphemeralNodesConcurrentlyCreated()
+            throws InterruptedException, NodeExistsException, NoNodeException {
+        long session = 0x1234;
+        int concurrent = 1001234;
+        //Thread[] threads = new Thread[concurrent];
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(15); 
+        CountDownLatch latch = new CountDownLatch(concurrent);
+        for (int i = 0; i < concurrent; i++) {
+            String parent = "/test" + i;
+            dt.createNode(parent, new byte[0], null, 0, -1, 1, 1);
+
+			fixedThreadPool.execute(new Runnable() {
+				public void run() {
+				    latch.countDown();
+					String path = parent + "/0";
+					try {
+						dt.createNode(path, new byte[0], null, session, -1, 1, 1);
+					} catch (Exception e) {
+						throw new IllegalStateException(e);
+					}
+				}
+			});
+        }
+        
+        latch.await();
+    
+        int sessionEphemerals = dt.getEphemerals(session).size();
+        Assert.assertEquals(concurrent, sessionEphemerals);
     }
 }
