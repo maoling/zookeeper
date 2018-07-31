@@ -67,6 +67,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class maintains the tree data structure. It doesn't have any networking
@@ -100,6 +101,8 @@ public class DataTree {
     /** this will be the string thats stored as a child of root */
     private static final String procChildZookeeper = procZookeeper.substring(1);
 
+    
+    AtomicInteger count = new AtomicInteger(0);
     /**
      * the zookeeper quota node that acts as the quota management node for
      * zookeeper
@@ -475,7 +478,7 @@ public class DataTree {
             } else if (ephemeralType == EphemeralType.TTL) {
                 ttls.add(path);
             } else if (ephemeralOwner != 0) {
-                HashSet<String> list = ephemerals.get(ephemeralOwner);
+                /*HashSet<String> list = ephemerals.get(ephemeralOwner);
                 if (list == null) {
                     list = new HashSet<String>();
                     HashSet<String> _list;
@@ -485,7 +488,29 @@ public class DataTree {
                 }
                 synchronized (list) {
                     list.add(path);
-                }
+                }*/
+            	
+				HashSet<String> list = ephemerals.get(ephemeralOwner);
+
+				if (list == null) {
+					synchronized (DataTree.class) {
+						if (list == null) {
+							System.out.println("fuck");
+							list = new HashSet<String>();
+							System.out.println("me");
+							synchronized (list) {
+								ephemerals.put(ephemeralOwner, list);
+								count.incrementAndGet();
+								System.out.println("1_count:" + count);
+							}
+						}
+					}
+				}
+				synchronized (list) {
+					list.add(path);
+					count.incrementAndGet();
+					System.out.println("2_count:" + count);
+				}
             }
             if (outputStat != null) {
             	child.copyStat(outputStat);
