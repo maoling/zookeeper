@@ -326,7 +326,7 @@ public class DataTreeTest extends ZKTestCase {
     public void testCheckSessionEphemeralNodesConcurrentlyCreated()
             throws InterruptedException, NodeExistsException, NoNodeException {
         long session = 0x1234;
-        int concurrent = 1000000;
+        int concurrent = 1234567;
         //Thread[] threads = new Thread[concurrent];
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(15); 
         CountDownLatch latch = new CountDownLatch(concurrent);
@@ -336,17 +336,19 @@ public class DataTreeTest extends ZKTestCase {
 
 			fixedThreadPool.execute(new Runnable() {
 				public void run() {
-				    latch.countDown();
 					String path = parent + "/0";
 					try {
 						dt.createNode(path, new byte[0], null, session, -1, 1, 1);
 					} catch (Exception e) {
 						throw new IllegalStateException(e);
+					} finally {
+						 latch.countDown();
 					}
 				}
 			});
         }
         latch.await();
+        System.out.println("----------finish-------------");
         int sessionEphemerals = dt.getEphemerals(session).size();
         Assert.assertEquals(concurrent, sessionEphemerals);
     }

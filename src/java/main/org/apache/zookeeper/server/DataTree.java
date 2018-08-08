@@ -131,14 +131,17 @@ public class DataTree {
     /**
      * This hashtable lists the paths of the ephemeral nodes of a session.
      */
-    private final ConcurrentMap<Long, HashSet<String>> ephemerals = new ConcurrentHashMap<>();
-
+    private final static ConcurrentMap<Long, HashSet<String>> ephemerals = new ConcurrentHashMap<>();
+    
     /**
      * This set contains the paths of all container nodes
      */
     private final Set<String> containers =
             Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
-
+    static {
+    	//System.out.println("init dt!!!");
+    	//ephemerals.put(0x1234L, new HashSet<String>());
+    }
     /**
      * This set contains the paths of all ttl nodes
      */
@@ -478,19 +481,25 @@ public class DataTree {
             } else if (ephemeralType == EphemeralType.TTL) {
                 ttls.add(path);
             } else if (ephemeralOwner != 0) {
-                /*HashSet<String> list = ephemerals.get(ephemeralOwner);
+                //System.out.println("ephemerals:" + ephemerals.toString());
+                HashSet<String> list = ephemerals.get(ephemeralOwner);
                 if (list == null) {
+                	System.out.println("fuck");
                     list = new HashSet<String>();
                     HashSet<String> _list;
                     if ((_list = ephemerals.putIfAbsent(ephemeralOwner, list)) != null) {
-                        list = _list;
+                    	count.incrementAndGet();
+						System.out.println("1_count:" + count);
+                    	list = _list;
                     }
                 }
                 synchronized (list) {
                     list.add(path);
-                }*/
+                    count.incrementAndGet();
+					System.out.println("2_count:" + count);
+                }
             	
-				HashSet<String> list = ephemerals.get(ephemeralOwner);
+				/*HashSet<String> list = ephemerals.get(ephemeralOwner);
 
 				if (list == null) {
 					synchronized (DataTree.class) {
@@ -510,7 +519,7 @@ public class DataTree {
 					list.add(path);
 					count.incrementAndGet();
 					System.out.println("2_count:" + count);
-				}
+				}*/
             }
             if (outputStat != null) {
             	child.copyStat(outputStat);
