@@ -18,15 +18,14 @@
 
 package org.apache.zookeeper.server;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import org.apache.zookeeper.ZKTestCase;
 import org.apache.zookeeper.server.metric.AvgMinMaxCounter;
 import org.apache.zookeeper.server.metric.SimpleCounter;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class ServerMetricsTest extends ZKTestCase {
     private static final int RANDOM_TRIALS = 100;
@@ -73,7 +72,7 @@ public class ServerMetricsTest extends ZKTestCase {
         Assert.assertEquals(expectedCnt, metric.getCount());
         Assert.assertEquals(expectedSum, metric.getTotal());
 
-        final Map<String, Long> results = metric.values();
+        final Map<String, Object> results = metric.values();
         Assert.assertEquals(expectedMax, (long)results.get("max_test"));
         Assert.assertEquals(expectedMin, (long)results.get("min_test"));
         Assert.assertEquals(expectedCnt, (long)results.get("cnt_test"));
@@ -101,7 +100,7 @@ public class ServerMetricsTest extends ZKTestCase {
         long expectedCount = Arrays.stream(values).sum();
         Assert.assertEquals(expectedCount, metric.getCount());
 
-        final Map<String, Long> results = metric.values();
+        final Map<String, Object> results = metric.values();
         Assert.assertEquals(expectedCount, (long)results.get("test"));
 
         metric.reset();

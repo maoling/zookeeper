@@ -18,9 +18,12 @@
 
 package org.apache.zookeeper.server.metric;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generic long counter that keep track of min/max/avg. The counter is
@@ -36,7 +39,7 @@ public class AvgMinMaxCounter implements Metric {
     public AvgMinMaxCounter(String name) {
         this.name = name;
     }
-
+    private static final Logger LOG = LoggerFactory.getLogger(AvgMinMaxCounter.class);
     public void addDataPoint(long value) {
         total.addAndGet(value);
         count.incrementAndGet();
@@ -58,13 +61,16 @@ public class AvgMinMaxCounter implements Metric {
             ;
     }
 
-    public long getAvg() {
+    public double getAvg() {
         // There is possible race-condition but we don't need the stats to be
         // extremely accurate.
         long currentCount = count.get();
         long currentTotal = total.get();
         if (currentCount > 0) {
-            return currentTotal / currentCount;
+            double avgLatency = currentTotal / (double)currentCount;
+            BigDecimal bg = new BigDecimal(avgLatency);
+            LOG.info("fuck_getAvg():" + bg.setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue());
+            return bg.setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue();
         }
         return 0;
     }
@@ -102,8 +108,8 @@ public class AvgMinMaxCounter implements Metric {
         addDataPoint(value);
     }
 
-    public Map<String, Long> values() {
-        Map<String, Long> m = new LinkedHashMap<String, Long>();
+    public Map<String, Object> values() {
+        Map<String, Object> m = new LinkedHashMap<String, Object>();
         m.put("avg_" + name, this.getAvg());
         m.put("min_" + name, this.getMin());
         m.put("max_" + name, this.getMax());

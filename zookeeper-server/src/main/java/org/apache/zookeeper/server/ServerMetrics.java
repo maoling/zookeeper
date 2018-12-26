@@ -18,12 +18,11 @@
 
 package org.apache.zookeeper.server;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.apache.zookeeper.server.metric.AvgMinMaxCounter;
 import org.apache.zookeeper.server.metric.Metric;
 import org.apache.zookeeper.server.metric.SimpleCounter;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 public enum ServerMetrics {
     /**
@@ -83,12 +82,12 @@ public enum ServerMetrics {
         metric.reset();
     }
 
-    Map<String, Long> getValues() {
+    Map<String, Object> getValues() {
         return metric.values();
     }
 
-    static public Map<String, Long> getAllValues() {
-        LinkedHashMap<String, Long> m = new LinkedHashMap<>();
+    static public Map<String, Object> getAllValues() {
+        LinkedHashMap<String, Object> m = new LinkedHashMap<>();
         for (ServerMetrics metric : ServerMetrics.values()) {
             m.putAll(metric.getValues());
         }

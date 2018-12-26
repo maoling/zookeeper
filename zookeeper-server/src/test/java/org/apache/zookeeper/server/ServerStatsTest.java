@@ -18,15 +18,14 @@
 
 package org.apache.zookeeper.server;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.mockito.Mockito.mock;
+
 import org.apache.zookeeper.ZKTestCase;
-import org.apache.zookeeper.common.Time;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.hamcrest.Matchers.lessThanOrEqualTo;
 
 public class ServerStatsTest extends ZKTestCase {
 
@@ -77,8 +76,7 @@ public class ServerStatsTest extends ZKTestCase {
                 lessThanOrEqualTo(serverStats.getMaxLatency()));
         assertThat("Min latency check", 1000L,
                 lessThanOrEqualTo(serverStats.getMinLatency()));
-        assertThat("Avg latency check", 1500L,
-                lessThanOrEqualTo(serverStats.getAvgLatency()));
+        Assert.assertEquals((double)1500, serverStats.getAvgLatency(), (double)200);
 
         // When reset...
         serverStats.resetLatency();
@@ -138,7 +136,7 @@ public class ServerStatsTest extends ZKTestCase {
     private void assertAllLatencyZero(ServerStats serverStats) {
         Assert.assertEquals(0L, serverStats.getMaxLatency());
         Assert.assertEquals(0L, serverStats.getMinLatency());
-        Assert.assertEquals(0L, serverStats.getAvgLatency());
+        Assert.assertEquals((double)0, serverStats.getAvgLatency(), (double)0.00001);
     }
 
     private void assertFsyncThresholdExceedCountZero(ServerStats serverStats) {
