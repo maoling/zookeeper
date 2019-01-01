@@ -713,6 +713,21 @@ public class Zab1_0Test extends ZKTestCase {
             }
         });
     }
+
+    @Test
+    public void testMethod() {
+        int index = 0;
+        while (true) {
+            try {
+                testNormalFollowerRunWithDiff();
+                Thread.sleep(200);
+                System.out.println("index:" + (index++));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
     
     @Test
     public void testNormalFollowerRunWithDiff() throws Exception {
