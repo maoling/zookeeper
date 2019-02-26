@@ -794,6 +794,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
                      * would be confusing in the logfiles.
                      */
                     if (ke != null) {
+                        LOG.info("fuck______KeeperException:" + ke);
                         type = OpCode.error;
                         txn = new ErrorTxn(Code.RUNTIMEINCONSISTENCY.intValue());
                     }
@@ -822,6 +823,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
                         }
                     }
 
+                    LOG.info("fuck___FIXME");
                     //FIXME: I don't want to have to serialize it here and then
                     //       immediately deserialize in next processor. But I'm
                     //       not sure how else to get the txn stored into our list.
