@@ -154,8 +154,17 @@ public class MultiTransactionTest extends ClientBase {
                 zk.multi(ops);
                 Assert.fail("Shouldn't have validated in ZooKeeper client!");
             } catch (KeeperException e) {
-                Assert.assertEquals("Wrong exception", expectedErr, e.code()
-                        .name());
+                String[] codeAndPath = expectedErr.split("@");
+                if (codeAndPath.length < 1 || codeAndPath.length > 2) {
+                    Assert.fail("Invalid exceptedErr=" + expectedErr);
+                }
+                Assert.assertEquals("Wrong exception", codeAndPath[0],
+                        e.code().name());
+
+                if (codeAndPath.length == 2) {
+                    Assert.assertEquals("Wrong exception", codeAndPath[1],
+                            e.getPath());
+                }
             } catch (IllegalArgumentException e) {
                 Assert.assertEquals("Wrong exception", expectedErr,
                         e.getMessage());
@@ -337,6 +346,22 @@ public class MultiTransactionTest extends ClientBase {
                 Op.create("/multi2", new byte[0], Ids.OPEN_ACL_UNSAFE,
                         CreateMode.PERSISTENT));
         String expectedErr = KeeperException.Code.BADARGUMENTS.name();
+        multiHavingErrors(zk, opList, expectedResultCodes, expectedErr);
+    }
+
+    @Test(timeout = 90000)
+    public void testNotExistPath() throws Exception {
+        List<Integer> expectedResultCodes = new ArrayList<>();
+        expectedResultCodes.add(KeeperException.Code.NONODE.intValue());
+        expectedResultCodes.add(KeeperException.Code.RUNTIMEINCONSISTENCY
+                .intValue());
+        expectedResultCodes.add(KeeperException.Code.RUNTIMEINCONSISTENCY
+                .intValue());
+
+        List<Op> opList = Arrays.asList(
+                Op.check("/nope", -1)
+        );
+        String expectedErr = KeeperException.Code.NONODE.name() + "@/nope";
         multiHavingErrors(zk, opList, expectedResultCodes, expectedErr);
     }
 
@@ -669,9 +694,9 @@ public class MultiTransactionTest extends ClientBase {
                  new DeleteResult(),
                  null);
 
-        opEquals(new ErrorResult(1),
-                 new ErrorResult(1),
-                 new ErrorResult(2));
+        opEquals(new ErrorResult(1, "/a"),
+                 new ErrorResult(1, "/a"),
+                 new ErrorResult(1, "/b"));
     }
 
     private void opEquals(OpResult expected, OpResult value, OpResult near) {

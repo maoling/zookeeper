@@ -20,6 +20,8 @@ package org.apache.zookeeper;
 
 import org.apache.zookeeper.data.Stat;
 
+import java.util.Objects;
+
 /**
  * Encodes the result of a single part of a multiple operation commit.
  */
@@ -178,14 +180,24 @@ public abstract class OpResult {
      */
     public static class ErrorResult extends OpResult {
         private int err;
+        private String path;
 
         public ErrorResult(int err) {
+            this(err, "");
+        }
+
+        public ErrorResult(int err, String path) {
             super(ZooDefs.OpCode.error);
             this.err = err;
+            this.path = path;
         }
 
         public int getErr() {
             return err;
+        }
+
+        public String getPath() {
+            return path;
         }
 
         @Override
@@ -194,7 +206,9 @@ public abstract class OpResult {
             if (!(o instanceof ErrorResult)) return false;
 
             ErrorResult other = (ErrorResult) o;
-            return getType() == other.getType() && err == other.getErr();
+            return getType() == other.getType()
+                    && err == other.getErr()
+                    && Objects.equals(path, other.getPath());
         }
 
         @Override

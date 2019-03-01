@@ -889,6 +889,7 @@ public class DataTree {
                 case OpCode.error:
                     ErrorTxn errTxn = (ErrorTxn) txn;
                     rc.err = errTxn.getErr();
+                    rc.path = errTxn.getPath();
                     break;
                 case OpCode.check:
                     CheckVersionTxn checkTxn = (CheckVersionTxn) txn;
@@ -946,7 +947,7 @@ public class DataTree {
                                                  : Code.OK.intValue();
 
                             subtxn.setType(OpCode.error);
-                            record = new ErrorTxn(ec);
+                            record = new ErrorTxn(ec, "");
                         }
 
                         if (failed) {

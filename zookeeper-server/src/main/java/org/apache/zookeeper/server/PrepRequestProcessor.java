@@ -796,7 +796,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
                     if (ke != null) {
                         LOG.info("fuck______KeeperException:" + ke);
                         type = OpCode.error;
-                        txn = new ErrorTxn(Code.RUNTIMEINCONSISTENCY.intValue());
+                        txn = new ErrorTxn(Code.RUNTIMEINCONSISTENCY.intValue(), "");
                     }
 
                     /* Prep the request and convert to a Txn */
@@ -808,7 +808,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
                         } catch (KeeperException e) {
                             ke = e;
                             type = OpCode.error;
-                            txn = new ErrorTxn(e.code().intValue());
+                            txn = new ErrorTxn(e.code().intValue(), ke.getPath());
 
                             if (e.code().intValue() > Code.APIERROR.intValue()) {
                                 LOG.info("Got user-level KeeperException when processing {} aborting" +
@@ -873,7 +873,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
         } catch (KeeperException e) {
             if (request.getHdr() != null) {
                 request.getHdr().setType(OpCode.error);
-                request.setTxn(new ErrorTxn(e.code().intValue()));
+                request.setTxn(new ErrorTxn(e.code().intValue(), e.getPath()));
             }
 
             if (e.code().intValue() > Code.APIERROR.intValue()) {
@@ -900,7 +900,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
             LOG.error("Dumping request buffer: 0x" + sb.toString());
             if (request.getHdr() != null) {
                 request.getHdr().setType(OpCode.error);
-                request.setTxn(new ErrorTxn(Code.MARSHALLINGERROR.intValue()));
+                request.setTxn(new ErrorTxn(Code.MARSHALLINGERROR.intValue(), ""));
             }
         }
         request.zxid = zks.getZxid();

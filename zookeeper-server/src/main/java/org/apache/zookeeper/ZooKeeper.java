@@ -1774,19 +1774,20 @@ public class ZooKeeper implements AutoCloseable {
             } catch (IllegalArgumentException iae) {
                 LOG.error("IllegalArgumentException: " + iae.getMessage());
                 ErrorResult err = new ErrorResult(
-                        KeeperException.Code.BADARGUMENTS.intValue());
+                        KeeperException.Code.BADARGUMENTS.intValue(),
+                        op.getPath());
                 results.add(err);
                 error = true;
                 continue;
             } catch (KeeperException ke) {
                 LOG.error("KeeperException: " + ke.getMessage());
-                ErrorResult err = new ErrorResult(ke.code().intValue());
+                ErrorResult err = new ErrorResult(ke.code().intValue(), ke.getPath());
                 results.add(err);
                 error = true;
                 continue;
             }
             ErrorResult err = new ErrorResult(
-                    KeeperException.Code.RUNTIMEINCONSISTENCY.intValue());
+                    KeeperException.Code.RUNTIMEINCONSISTENCY.intValue(), "");
             results.add(err);
         }
         if (false == error) {
@@ -1842,7 +1843,7 @@ public class ZooKeeper implements AutoCloseable {
         }
 
         if (fatalError != null) {
-            KeeperException ex = KeeperException.create(KeeperException.Code.get(fatalError.getErr()));
+            KeeperException ex = KeeperException.create(KeeperException.Code.get(fatalError.getErr()), fatalError.getPath());
             ex.setMultiResults(results);
             throw ex;
         }

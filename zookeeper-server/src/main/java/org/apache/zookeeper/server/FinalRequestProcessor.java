@@ -196,8 +196,11 @@ public class FinalRequestProcessor implements RequestProcessor {
                 if (request.getException() != null) {
                     throw request.getException();
                 } else {
-                    throw KeeperException.create(KeeperException.Code
-                            .get(((ErrorTxn) request.getTxn()).getErr()));
+                    ErrorTxn errorTxn = (ErrorTxn) request.getTxn();
+
+                    throw KeeperException.create(
+                            KeeperException.Code.get(errorTxn.getErr()),
+                            errorTxn.getPath());
                 }
             }
 
@@ -255,7 +258,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                             subResult = new SetDataResult(subTxnResult.stat);
                             break;
                         case OpCode.error:
-                            subResult = new ErrorResult(subTxnResult.err) ;
+                            subResult = new ErrorResult(subTxnResult.err, subTxnResult.path) ;
                             if (subTxnResult.err == Code.SESSIONMOVED.intValue()) {
                                 throw new SessionMovedException();
                             }
