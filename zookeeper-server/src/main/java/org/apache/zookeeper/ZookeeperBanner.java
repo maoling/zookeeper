@@ -18,29 +18,26 @@
 
 package org.apache.zookeeper;
 
-import org.slf4j.Logger;
-
 /**
- * ZookeeperBanner which writes the 'Zookeeper' banner at the start of zk server.
+ * ZookeeperBanner which writes the 'ZooKeeper' banner at the start of zk server.
  *
  */
 public class ZookeeperBanner {
 
     private static final String[] BANNER = {"",
-            "  ______                  _                                          ",
-            " |___  /                 | |                                         ",
-            "    / /    ___     ___   | | __   ___    ___   _ __     ___   _ __   ",
-            "   / /    / _ \\   / _ \\  | |/ /  / _ \\  / _ \\ | '_ \\   / _ \\ | '__|",
-            "  / /__  | (_) | | (_) | |   <  |  __/ |  __/ | |_) | |  __/ | |    " ,
-            " /_____|  \\___/   \\___/  |_|\\_\\  \\___|  \\___| | .__/   \\___| |_|",
-            "                                              | |                     " ,
-            "                                              |_|                     ",
-            ""
+        "  ______              _  __                              \n" ,
+        " |___  /             | |/ /                              \n" ,
+        "    / /  ___    ___  | ' /  ___   ___  _ __    ___  _ __ \n" ,
+        "   / /  / _ \\  / _ \\ |  <  / _ \\ / _ \\| '_ \\  / _ \\| '__|\n" ,
+        "  / /__| (_) || (_) || . \\|  __/|  __/| |_) ||  __/| |   \n" ,
+        " /_____|\\___/  \\___/ |_|\\_\\\\___| \\___|| .__/  \\___||_|   \n" ,
+        "                                      | |                \n" ,
+        "                                      |_|               ",
     };
 
-    public static void printBanner(Logger log) {
+    public static void printBanner() {
         for (String line : BANNER) {
-            log.info(line);
+            System.out.println(line);
         }
     }
 }

@@ -92,7 +92,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     static {
         LOG = LoggerFactory.getLogger(ZooKeeperServer.class);
 
-        ZookeeperBanner.printBanner(LOG);
+        ZookeeperBanner.printBanner();
 
         Environment.logEnv("Server environment:", LOG);
     }
