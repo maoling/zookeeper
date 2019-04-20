@@ -84,7 +84,7 @@ public class GetAclCommand extends CliCommand {
         return false;
     }
 
-    private static String getPermString(int perms) {
+    protected static String getPermString(int perms) {
         StringBuilder p = new StringBuilder();
         if ((perms & ZooDefs.Perms.CREATE) != 0) {
             p.append('c');
