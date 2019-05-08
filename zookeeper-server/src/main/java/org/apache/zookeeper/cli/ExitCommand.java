@@ -24,15 +24,15 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.zookeeper.Version;
 
 /**
- * version command for cli
+ * exit command for cli
  */
-public class VersionCommand extends CliCommand {
+public class ExitCommand extends CliCommand {
 
     private static Options options = new Options();
     private String[] args;
 
-    public VersionCommand() {
-        super("version", "");
+    public ExitCommand() {
+        super("exit", "");
     }
 
     @Override
