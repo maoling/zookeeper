@@ -113,13 +113,8 @@ public class DelQuotaCommand extends CliCommand {
             return true;
         }
         StatsTrack strack = new StatsTrack(new String(data));
-        if (bytes && !numNodes) {
-            strack.setBytes(-1L);
-            zk.setData(quotaPath, strack.toString().getBytes(), -1);
-        } else if (!bytes && numNodes) {
-            strack.setCount(-1);
-            zk.setData(quotaPath, strack.toString().getBytes(), -1);
-        } else if (bytes && numNodes) {
+        if (bytes && numNodes || (bytes && strack.getCount() == -1)
+                || (numNodes && strack.getBytes() == -1)) {
             // delete till you can find a node with more than
             // one child
             List<String> children = zk.getChildren(parentPath, false);
@@ -129,6 +124,12 @@ public class DelQuotaCommand extends CliCommand {
             }
             // cut the tree till their is more than one child
             trimProcQuotas(zk, parentPath);
+        } else if (bytes && !numNodes) {
+            strack.setBytes(-1L);
+            zk.setData(quotaPath, strack.toString().getBytes(), -1);
+        } else if (!bytes && numNodes) {
+            strack.setCount(-1);
+            zk.setData(quotaPath, strack.toString().getBytes(), -1);
         }
         return true;
     }

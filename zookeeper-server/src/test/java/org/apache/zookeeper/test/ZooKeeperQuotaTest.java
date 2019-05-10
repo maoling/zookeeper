@@ -27,6 +27,7 @@ import org.apache.zookeeper.StatsTrack;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.ZooKeeperMain;
 import org.apache.zookeeper.ZooDefs.Ids;
+import org.apache.zookeeper.cli.DelQuotaCommand;
 import org.apache.zookeeper.data.Stat;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.junit.Assert;
@@ -75,5 +76,52 @@ public class ZooKeeperQuotaTest extends ClientBase {
         ZooKeeperServer server = getServer(serverFactory);
         Assert.assertNotNull("Quota is still set",
             server.getZKDatabase().getDataTree().getMaxPrefixWithQuota(path) != null);
+    }
+
+    /**
+     * setquota -n 10 /test
+     * 5. Now try to delete this as below
+     * delquota -n /test
+     * 6. now check the quota
+     *
+     * [zk: localhost:2181(CONNECTED) 1] listquota /test
+     * absolute path is /zookeeper/quota/test/zookeeper_limits
+     * Output quota for /test count=-1,bytes=-1
+     * Output stat for /test count=1,bytes=5
+     *
+     * 7. Here it is not deleted quota node for test
+     * 8. Now try to set some new quota
+     * It fails as it is not deleted correctly while delete
+     *
+     * [zk: localhost:2181(CONNECTED) 3] setquota -n 11 /test
+     * @throws Exception
+     */
+    /**
+     * @see ZOOKEEPER-2563
+     * @throws Exception
+     */
+    @Test
+    public void testDelQuota() throws Exception {
+
+        final ZooKeeper zk = createClient();
+        final String path = "/test";
+        zk.create("/test", null, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+
+        ZooKeeperMain.createQuota(zk, path, -1L, 10);
+
+        DelQuotaCommand.delQuota(zk, path, false, true);
+
+        //listquota, assert no quota in the path:test
+        String absolutePath = Quotas.quotaZookeeper + path + "/"
+                + Quotas.limitNode;
+        try {
+            Stat stat = new Stat();
+            zk.getData(absolutePath, false, stat);
+        } catch (KeeperException.NoNodeException ne) {
+            //err.println("quota for " + path + " does not exist.");
+            //expected
+        }
+
+        ZooKeeperMain.createQuota(zk, path, -1L, 10);
     }
 }
