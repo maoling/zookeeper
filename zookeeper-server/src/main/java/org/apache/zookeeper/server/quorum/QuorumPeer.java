@@ -1667,7 +1667,10 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
                     try {
                         String fileName = getNextDynamicConfigFilename();
                         if (fileName != null) {
-                            QuorumPeerConfig.writeDynamicConfig(fileName, qv, true);
+                            Integer clientPort = QuorumPeerConfig.writeDynamicConfig(fileName, qv, getId(),true);
+                            QuorumPeerConfig.editStaticConfig(configFilename,
+                                    fileName, clientPort,
+                                    needEraseClientInfoFromStaticConfig());
                         }
                     } catch (IOException e) {
                         LOG.error("Error writing next dynamic config file to disk: ", e.getMessage());
@@ -1697,10 +1700,11 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
                     try {
                         String dynamicConfigFilename = makeDynamicConfigFilename(
                                 qv.getVersion());
-                        QuorumPeerConfig.writeDynamicConfig(
-                                dynamicConfigFilename, qv, false);
+                        System.out.println("fuck_QuorumPeer.setQuorumVerifier:" + dynamicConfigFilename);
+                        Integer clientPort = QuorumPeerConfig.writeDynamicConfig(
+                                dynamicConfigFilename, qv, getId(),false);
                         QuorumPeerConfig.editStaticConfig(configFilename,
-                                dynamicConfigFilename,
+                                dynamicConfigFilename, clientPort,
                                 needEraseClientInfoFromStaticConfig());
                     } catch (IOException e) {
                         LOG.error("Error closing file: ", e.getMessage());

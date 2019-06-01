@@ -543,10 +543,12 @@ public class QuorumPeerConfig {
     /**
      * Writes dynamic configuration file
      */
-    public static void writeDynamicConfig(final String dynamicConfigFilename,
+    public static Integer writeDynamicConfig(final String dynamicConfigFilename,
                                           final QuorumVerifier qv,
+                                          final long myId,
                                           final boolean needKeepVersion)
             throws IOException {
+        final Integer[] clientPort = new Integer[1];
 
         new AtomicFileWritingIdiom(new File(dynamicConfigFilename), new WriterStatement() {
             @Override
@@ -565,12 +567,30 @@ public class QuorumPeerConfig {
                     servers.add(key
                             .concat("=")
                             .concat(value));
+
+                    if (key.split(".").length == 2) {
+                        try {
+                            if (Integer.parseInt(key.split(".")[1]) == myId) {
+                                if (value.split(";").length == 2) {
+                                    if (value.split(";")[1].contains("=")) {
+                                        clientPort[0] = Integer.parseInt(value.split(";")[1].split("=")[1]);
+                                    } else {
+                                        clientPort[0] = Integer.parseInt(value.split(";")[1]);
+                                    }
+                                }
+                            }
+                        } catch (NumberFormatException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
 
                 Collections.sort(servers);
                 out.write(StringUtils.joinStrings(servers, "\n"));
             }
         });
+
+        return clientPort[0];
     }
 
     /**
@@ -583,9 +603,11 @@ public class QuorumPeerConfig {
      */
     public static void editStaticConfig(final String configFileStr,
                                         final String dynamicFileStr,
+                                        final Integer clientPort,
                                         final boolean eraseClientPortAddress)
             throws IOException {
         // Some tests may not have a static config file.
+        System.out.println("fuck_configFileStr:" + configFileStr+",dynamicFileStr:"+dynamicFileStr+",eraseClientPortAddress:"+eraseClientPortAddress);
         if (configFileStr == null)
             return;
 
@@ -619,13 +641,15 @@ public class QuorumPeerConfig {
                         || key.startsWith("dynamicConfigFile")
                         || key.startsWith("peerType")
                         || (eraseClientPortAddress
-                            && (key.startsWith("clientPort")
-                                || key.startsWith("clientPortAddress")))) {
+                            && key.startsWith("clientPortAddress"))) {
                         // not writing them back to static file
                         continue;
                     }
-
                     String value = entry.getValue().toString().trim();
+
+                    if (key.startsWith("clientPort") && clientPort != null) {
+                        value = String.valueOf(clientPort.intValue());
+                    }
                     out.write(key.concat("=").concat(value).concat("\n"));
                 }
 
