@@ -549,7 +549,7 @@ public class QuorumPeerConfig {
                                           final boolean needKeepVersion)
             throws IOException {
         final Integer[] clientPort = new Integer[1];
-
+        System.out.println("fuck_writeDynamicConfig_rev:myId:" +myId);
         new AtomicFileWritingIdiom(new File(dynamicConfigFilename), new WriterStatement() {
             @Override
             public void write(Writer out) throws IOException {
@@ -568,14 +568,20 @@ public class QuorumPeerConfig {
                             .concat("=")
                             .concat(value));
 
-                    if (key.split(".").length == 2) {
+                    System.out.println("fuck_writeDynamicConfig:" + key+","+value);
+                    if (key.split("\\.").length == 2) {
                         try {
-                            if (Integer.parseInt(key.split(".")[1]) == myId) {
-                                if (value.split(";").length == 2) {
-                                    if (value.split(";")[1].contains("=")) {
-                                        clientPort[0] = Integer.parseInt(value.split(";")[1].split("=")[1]);
+                            System.out.println("fuck_hit_1:" + value);
+                            if (Integer.parseInt(key.split("\\.")[1]) == myId) {
+                                System.out.println("fuck_hit_2:" + value);
+                                if (value.split("\\;").length == 2) {
+                                    System.out.println("fuck_hit_3:" + value);
+                                    if (value.split("\\;")[1].contains(":")) {
+                                        System.out.println("fuck_hit_parse_clientPort:" + value);
+                                        clientPort[0] = Integer.parseInt(value.split("\\;")[1].split(":")[1]);
                                     } else {
-                                        clientPort[0] = Integer.parseInt(value.split(";")[1]);
+                                        System.out.println("fuck_hit_parse_clientPort2:" + value);
+                                        clientPort[0] = Integer.parseInt(value.split("\\;")[1]);
                                     }
                                 }
                             }
@@ -589,7 +595,7 @@ public class QuorumPeerConfig {
                 out.write(StringUtils.joinStrings(servers, "\n"));
             }
         });
-
+        System.out.println("fuck_writeDynamicConfig_return:clientPort:" + clientPort[0]);
         return clientPort[0];
     }
 
@@ -607,7 +613,9 @@ public class QuorumPeerConfig {
                                         final boolean eraseClientPortAddress)
             throws IOException {
         // Some tests may not have a static config file.
-        System.out.println("fuck_configFileStr:" + configFileStr+",dynamicFileStr:"+dynamicFileStr+",eraseClientPortAddress:"+eraseClientPortAddress);
+        System.out.println("fuck_editStaticConfig_rev:" + configFileStr + ",dynamicFileStr:" + dynamicFileStr
+                + ",eraseClientPortAddress:" + eraseClientPortAddress
+                + ",clientPort=" + clientPort);
         if (configFileStr == null)
             return;
 
@@ -632,9 +640,11 @@ public class QuorumPeerConfig {
         new AtomicFileWritingIdiom(new File(configFileStr), new WriterStatement() {
             @Override
             public void write(Writer out) throws IOException {
+                boolean hasClientPort = false;
                 for (Entry<Object, Object> entry : cfg.entrySet()) {
                     String key = entry.getKey().toString().trim();
 
+                    System.out.println("fuck_editStaticConfig_write:" + key+","+ entry.getValue().toString().trim());
                     if (key.startsWith("server.")
                         || key.startsWith("group")
                         || key.startsWith("weight")
@@ -646,11 +656,18 @@ public class QuorumPeerConfig {
                         continue;
                     }
                     String value = entry.getValue().toString().trim();
-
-                    if (key.startsWith("clientPort") && clientPort != null) {
-                        value = String.valueOf(clientPort.intValue());
+                    if (key.startsWith("clientPort")) {
+                        hasClientPort = true;
+                        if (clientPort != null && clientPort != Integer.parseInt(value)) {
+                            value = String.valueOf(clientPort);
+                        }
                     }
+
                     out.write(key.concat("=").concat(value).concat("\n"));
+                }
+
+                if (!hasClientPort && clientPort != null) {
+                    out.write("clientPort=".concat(String.valueOf(clientPort)).concat("\n"));
                 }
 
                 // updates the dynamic file pointer
