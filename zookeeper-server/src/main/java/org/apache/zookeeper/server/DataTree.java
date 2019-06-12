@@ -36,6 +36,7 @@ import org.apache.zookeeper.Watcher.WatcherType;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooDefs.OpCode;
 import org.apache.zookeeper.common.PathTrie;
+import org.apache.zookeeper.common.Time;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
 import org.apache.zookeeper.data.StatPersisted;
@@ -446,6 +447,7 @@ public class DataTree {
         stat.setAversion(0);
         stat.setEphemeralOwner(ephemeralOwner);
         DataNode parent = nodes.get(parentName);
+        System.out.println("fuck_datatree_create_node");
         if (parent == null) {
             throw new KeeperException.NoNodeException();
         }
@@ -681,6 +683,18 @@ public class DataTree {
         if (n == null) {
             throw new KeeperException.NoNodeException();
         }
+        int lastSlash = path.lastIndexOf('/');
+        String parentName = path.substring(0, lastSlash);
+        DataNode parent = nodes.get(parentName);
+        if (ttls.size() > 0 && ttls.contains(path) && checkTTLExpire(n)) {
+            ContainerManager.deletePath(path);
+            throw new KeeperException.NoNodeException();
+        }
+        if (containers.size() > 0 && containers.contains(path) && checkContainerExpire(n)) {
+            ContainerManager.deletePath(path);
+            throw new KeeperException.NoNodeException();
+        }
+
         synchronized (n) {
             n.copyStat(stat);
             if (watcher != null) {
@@ -837,7 +851,7 @@ public class DataTree {
     public ProcessTxnResult processTxn(TxnHeader header, Record txn, boolean isSubTxn)
     {
         ProcessTxnResult rc = new ProcessTxnResult();
-
+        System.out.println("fuck_DataTree.processTxn():header.getType()" + header.getType());
         try {
             rc.clientId = header.getClientId();
             rc.cxid = header.getCxid();
@@ -1565,5 +1579,40 @@ public class DataTree {
             return;
         }
         ServerMetrics.getMetrics().WRITE_PER_NAMESPACE.add(namespace, path.length() + bytes);
+    }
+
+    private boolean checkContainerExpire(DataNode node) {
+        /*
+                cversion > 0: keep newly created containers from being deleted
+                before any children have been added. If you were to create the
+                container just before a container cleaning period the container
+                would be immediately be deleted.
+             */
+        if ((node != null) && (node.stat.getCversion() > 0) &&
+                (node.getChildren().isEmpty())) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkTTLExpire(DataNode node) {
+        if (node != null) {
+            Set<String> children = node.getChildren();
+            if (children.isEmpty()) {
+                if (EphemeralType.get(node.stat.getEphemeralOwner()) == EphemeralType.TTL) {
+                    long ttl = EphemeralType.TTL.getValue(node.stat.getEphemeralOwner());
+                    System.out.println("fuck_checkTTLExpire_ttl:" + ttl);
+                    if ((ttl != 0) && (getElapsed(node) > ttl)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    // VisibleForTesting
+    protected long getElapsed(DataNode node) {
+        return Time.currentWallTime() - node.stat.getMtime();
     }
 }

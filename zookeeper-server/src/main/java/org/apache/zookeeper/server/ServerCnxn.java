@@ -116,6 +116,7 @@ public abstract class ServerCnxn implements Stats, Watcher {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(
             ZooKeeperServer.intBufferStartingSizeBytes);
         BinaryOutputArchive bos = BinaryOutputArchive.getArchive(baos);
+        System.out.println("fuck_serializeRecord:" + record);
         bos.writeRecord(record, null);
         return baos.toByteArray();
     }
@@ -128,6 +129,7 @@ public abstract class ServerCnxn implements Stats, Watcher {
             ResponseCache cache = zkServer.getReadResponseCache();
             if (cache != null && stat != null && cacheKey != null &&
                     !cacheKey.endsWith(Quotas.statNode)) {
+                System.out.println("fuck_Use cache to get serialized dat");
                 // Use cache to get serialized data.
                 //
                 // NB: Tag is ignored both during cache lookup and serialization,
@@ -142,6 +144,7 @@ public abstract class ServerCnxn implements Stats, Watcher {
                     ServerMetrics.getMetrics().RESPONSE_PACKET_CACHE_HITS.add(1);
                 }
             } else {
+                System.out.println("fuck_data = serializeRecord(r):" + r);
                 data = serializeRecord(r);
             }
         }

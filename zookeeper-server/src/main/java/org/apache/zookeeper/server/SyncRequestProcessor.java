@@ -239,6 +239,7 @@ public class SyncRequestProcessor extends ZooKeeperCriticalThread implements
       ServerMetrics.getMetrics().BATCH_SIZE.add(toFlush.size());
 
       long flushStartTime = Time.currentElapsedTime();
+      System.out.println("fuck_SyncRequestProcessor:zks.getZKDatabase().commit_one_log()");
       zks.getZKDatabase().commit();
       ServerMetrics.getMetrics().SYNC_PROCESSOR_FLUSH_TIME.add(Time.currentElapsedTime() - flushStartTime);
 
@@ -281,6 +282,7 @@ public class SyncRequestProcessor extends ZooKeeperCriticalThread implements
         Objects.requireNonNull(request, "Request cannot be null");
 
         request.syncQueueStartTime = Time.currentElapsedTime();
+        System.out.println("fuck_the request that syncprocssor rev:" + request.toString());
         queuedRequests.add(request);
         ServerMetrics.getMetrics().SYNC_PROCESSOR_QUEUED.add(1);
     }

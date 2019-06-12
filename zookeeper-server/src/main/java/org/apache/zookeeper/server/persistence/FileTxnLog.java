@@ -392,6 +392,7 @@ public class FileTxnLog implements TxnLog {
 
                 FileChannel channel = log.getChannel();
                 channel.force(false);
+                System.out.println("fuck_really_FileTxnLog.commit:"+ log);
 
                 syncElapsedMS = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startSyncNS);
                 if (syncElapsedMS > fsyncWarningThresholdMS) {

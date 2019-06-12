@@ -693,6 +693,7 @@ public class NIOServerCnxn extends ServerCnxn {
     public void sendResponse(ReplyHeader h, Record r, String tag,
                              String cacheKey, Stat stat) {
         try {
+            System.out.println("fuck_NIOServerCnxn.sendResponse");
             sendBuffer(serialize(h, r, tag, cacheKey, stat));
             decrOutstandingAndCheckThrottle(h);
          } catch(Exception e) {
@@ -717,7 +718,7 @@ public class NIOServerCnxn extends ServerCnxn {
 
         // Convert WatchedEvent to a type that can be sent over the wire
         WatcherEvent e = event.getWrapper();
-
+        System.out.println("fuck_NIOServerCnxn_sendResponse");
         sendResponse(h, e, "notification", null, null);
     }
 

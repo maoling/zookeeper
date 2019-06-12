@@ -299,7 +299,8 @@ public class TxnLogToolkit implements Closeable {
         }
         if (txn instanceof CreateTxn) {
             CreateTxn createTxn = ((CreateTxn) txn);
-            txnData.append(createTxn.getPath() + "," + new String(createTxn.getData()))
+            System.out.println("fuck_zktool_createTxn:" + createTxn.toString());
+            txnData.append(createTxn.getPath() + "," + createTxn.getData()==null?"":new String(createTxn.getData()))
                    .append("," + createTxn.getAcl() + "," + createTxn.getEphemeral())
                    .append("," + createTxn.getParentCVersion());
         } else if (txn instanceof SetDataTxn) {

@@ -178,6 +178,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
         if (lastChange == null || lastChange.stat == null) {
             throw new KeeperException.NoNodeException(path);
         }
+        System.out.println("fuck_last_ChangeRecord:" + lastChange.toString());
         return lastChange;
     }
 
@@ -671,6 +672,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
         validatePath(path, request.sessionId);
         try {
             if (getRecordForPath(path) != null) {
+                System.out.println("fuck_hit_NodeExists_preprocessor");
                 throw new KeeperException.NodeExistsException(path);
             }
         } catch (KeeperException.NoNodeException e) {
@@ -1013,6 +1015,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
     }
 
     public void processRequest(Request request) {
+        System.out.println("fuck_PrepRequestProcessor_request_rev:" + request);
         request.prepQueueStartTime =  Time.currentElapsedTime();
         submittedRequests.add(request);
         ServerMetrics.getMetrics().PREP_PROCESSOR_QUEUED.add(1);

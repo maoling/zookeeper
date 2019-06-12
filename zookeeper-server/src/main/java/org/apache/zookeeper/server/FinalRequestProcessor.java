@@ -114,9 +114,12 @@ public class FinalRequestProcessor implements RequestProcessor {
             ZooTrace.logRequest(LOG, traceMask, 'E', request, "");
         }
         ProcessTxnResult rc = null;
+        System.out.println("fuck_finprocessor_rec_request:" + request.toString());
         synchronized (zks.outstandingChanges) {
             // Need to process local session requests
+            System.out.println("fuck_begin_finprocessor_zks.processTxn(request)t which will try to update the datatree");
             rc = zks.processTxn(request);
+            System.out.println("fuck_begin_finprocessor_zks.processTxn(request) rc=" + rc);
 
             // request.hdr is set for write requests, which are the only ones
             // that add to outstandingChanges.
@@ -213,6 +216,7 @@ public class FinalRequestProcessor implements RequestProcessor {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("{}",request);
             }
+            System.out.println("fuck_FinalRequestProcessor.processRequest_request.type:" + request.type);
             switch (request.type) {
             case OpCode.ping: {
                 lastOp = "PING";
@@ -273,6 +277,7 @@ public class FinalRequestProcessor implements RequestProcessor {
             case OpCode.create: {
                 lastOp = "CREA";
                 rsp = new CreateResponse(rc.path);
+                System.out.println("fuck_finalprocessor_create_node");
                 err = Code.get(rc.err);
                 break;
             }
@@ -564,6 +569,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                 }
                 cnxn.sendResponse(hdr, rsp, "response", path, stat);
             } else {
+                System.out.println("fuck_before_cnxn.sendResponse：rsp" + ((rsp== null) ? "":rsp.toString()));
                 cnxn.sendResponse(hdr, rsp, "response");
             }
             if (request.type == OpCode.closeSession) {

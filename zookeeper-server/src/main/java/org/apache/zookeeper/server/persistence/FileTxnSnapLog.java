@@ -294,6 +294,7 @@ public class FileTxnSnapLog {
                     highestZxid = hdr.getZxid();
                 }
                 try {
+                    System.out.println("fuck_run_in_while_fastForwardFromEdits:");
                     processTransaction(hdr,dt,sessions, itr.getTxn());
                     txnLoaded++;
                 } catch(KeeperException.NoNodeException e) {
@@ -356,6 +357,7 @@ public class FileTxnSnapLog {
             Map<Long, Integer> sessions, Record txn)
         throws KeeperException.NoNodeException {
         ProcessTxnResult rc;
+        System.out.println("fuck_FileTxnSnapLog.processTransaction: hdr.getType()" + hdr.getType());
         switch (hdr.getType()) {
         case OpCode.createSession:
             sessions.put(hdr.getClientId(),
