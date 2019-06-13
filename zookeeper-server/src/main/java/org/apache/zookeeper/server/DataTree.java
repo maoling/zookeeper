@@ -63,6 +63,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -74,6 +75,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 /**
  * This class maintains the tree data structure. It doesn't have any networking
@@ -686,12 +688,12 @@ public class DataTree {
         int lastSlash = path.lastIndexOf('/');
         String parentName = path.substring(0, lastSlash);
         DataNode parent = nodes.get(parentName);
-        if (ttls.size() > 0 && ttls.contains(path) && checkTTLExpire(n)) {
-            ContainerManager.deletePath(path);
+        if (ttls.contains(path) && checkTTLExpire(n)) {
+            //ContainerManager.deletePath(path);
             throw new KeeperException.NoNodeException();
         }
-        if (containers.size() > 0 && containers.contains(path) && checkContainerExpire(n)) {
-            ContainerManager.deletePath(path);
+        if (containers.contains(path) && checkContainerExpire(n)) {
+            //ContainerManager.deletePath(path);
             throw new KeeperException.NoNodeException();
         }
 
@@ -730,12 +732,36 @@ public class DataTree {
             throw new KeeperException.NoNodeException();
         }
         List<String> children;
+        List<String> newChildren = new ArrayList<>();
         synchronized (n) {
             if (stat != null) {
                 n.copyStat(stat);
             }
             children = new ArrayList<String>(n.getChildren());
+            System.out.println("fuck_get_before_children:" + children+",ttls="+ttls);
+            for (String  child : children) {
 
+                String newPath = path.equals("/") ? path + child : path + "/" + child;
+                n = nodes.get(newPath);
+
+                System.out.println("fuck_t_or_f:child:"+child+","+!(
+                        (ttls.contains(path.equals("/") ? path + child : path + "/" + child) && checkTTLExpire(n))
+                                || (containers.contains(path.equals("/") ? path + child : path + "/" + child) && checkContainerExpire(n))));
+                System.out.println("fuck_here:" + ttls.contains(path.equals("/") ? path + child : path + "/" + child));
+                System.out.println("fuck_here:"+ checkTTLExpire(n));
+                System.out.println("fuck_here:"+containers.contains(path.equals("/") ? path + child : path + "/" + child));
+                System.out.println("fuck_here:"+checkContainerExpire(n));
+                if (!((ttls.contains(newPath) && checkTTLExpire(n))
+                            || (containers.contains(newPath) && checkContainerExpire(n)))) {
+                    newChildren.add(child);
+                }
+
+            }
+//            children = children.stream().filter(key -> !(
+//                    (ttls.contains(path.equals("/") ? path + key : path + "/" + key) && checkTTLExpire(n))
+//                            || (containers.contains(path.equals("/") ? path + key : path + "/" + key) && checkContainerExpire(n)))
+//            ).collect(Collectors.toList());
+            System.out.println("fuck_get_after_children:" + children);
             if (watcher != null) {
                 childWatches.addWatch(path, watcher);
             }
@@ -747,7 +773,7 @@ public class DataTree {
         }
         updateReadStat(path, bytes);
 
-        return children;
+        return newChildren;
     }
 
     public int getAllChildrenNumber(String path) {
@@ -1596,10 +1622,15 @@ public class DataTree {
     }
 
     private boolean checkTTLExpire(DataNode node) {
+        System.out.println("fuck_checkTTLExpire_1");
         if (node != null) {
+            System.out.println("fuck_checkTTLExpire_1.5");
             Set<String> children = node.getChildren();
+            System.out.println("fuck_checkTTLExpire_1.8:children" + children);
             if (children.isEmpty()) {
+                System.out.println("fuck_checkTTLExpire_2");
                 if (EphemeralType.get(node.stat.getEphemeralOwner()) == EphemeralType.TTL) {
+                    System.out.println("fuck_checkTTLExpire_3");
                     long ttl = EphemeralType.TTL.getValue(node.stat.getEphemeralOwner());
                     System.out.println("fuck_checkTTLExpire_ttl:" + ttl);
                     if ((ttl != 0) && (getElapsed(node) > ttl)) {

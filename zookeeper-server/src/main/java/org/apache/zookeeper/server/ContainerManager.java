@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ContainerManager {
     private static final Logger LOG = LoggerFactory.getLogger(ContainerManager.class);
     private final ZKDatabase zkDb;
-    private static RequestProcessor requestProcessor;
+    private final RequestProcessor requestProcessor;
     private final int checkIntervalMs;
     private final int maxPerMinute;
     private final Timer timer;
@@ -113,28 +113,23 @@ public class ContainerManager {
         for (String containerPath : getCandidates()) {
             long startMs = Time.currentElapsedTime();
 
-            deletePath(containerPath);
+            ByteBuffer path = ByteBuffer.wrap(containerPath.getBytes());
+            Request request = new Request(null, 0, 0,
+                    ZooDefs.OpCode.deleteContainer, path, null);
+            try {
+                LOG.info("Attempting to delete candidate container: {}",
+                        containerPath);
+                requestProcessor.processRequest(request);
+            } catch (Exception e) {
+                LOG.error("Could not delete container: {}",
+                        containerPath, e);
+            }
 
             long elapsedMs = Time.currentElapsedTime() - startMs;
             long waitMs = minIntervalMs - elapsedMs;
-            System.out.println("fuck_minIntervalMs:" + minIntervalMs + ",elapsedMs="+elapsedMs+",waitMs="+waitMs);
             if (waitMs > 0) {
                 Thread.sleep(waitMs);
             }
-        }
-    }
-
-    public static void deletePath(String containerPath) {
-        ByteBuffer path = ByteBuffer.wrap(containerPath.getBytes());
-        Request request = new Request(null, 0, 0,
-                ZooDefs.OpCode.deleteContainer, path, null);
-        try {
-            LOG.info("Attempting to delete candidate container: {}, at the timestamp: {}",
-                    containerPath, System.currentTimeMillis());
-            requestProcessor.processRequest(request);
-        } catch (Exception e) {
-            LOG.error("Could not delete container: {}",
-                    containerPath, e);
         }
     }
 
