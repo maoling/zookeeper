@@ -606,6 +606,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
                         }
                     }
                     for (String path2Delete : es) {
+                        System.out.println("fuck_-----------");
                         addChangeRecord(new ChangeRecord(request.getHdr().getZxid(), path2Delete, null, 0, null));
                     }
 

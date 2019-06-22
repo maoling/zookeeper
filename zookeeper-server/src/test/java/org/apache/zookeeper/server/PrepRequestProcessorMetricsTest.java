@@ -168,7 +168,7 @@ public class PrepRequestProcessorMetricsTest extends ZKTestCase {
         ZooKeeper zk = ClientBase.createZKClient(util.getConnString());
         zk.create("/test", new byte[50], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 
-        CountDownLatch created = new CountDownLatch(1);
+        CountDownLatch created = new CountDownLatch(1) ;
         zk.exists("/test", new SimpleWatcher(created));
         created.await(200, TimeUnit.MILLISECONDS);
 
