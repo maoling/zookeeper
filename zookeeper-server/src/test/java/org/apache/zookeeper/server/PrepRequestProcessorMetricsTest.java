@@ -107,6 +107,7 @@ public class PrepRequestProcessorMetricsTest extends ZKTestCase {
 
     @Test
     public void testPrepRequestProcessorMetrics() throws Exception {
+        System.out.println("fuck_run_testPrepRequestProcessorMetrics");
         CountDownLatch threeRequests = new CountDownLatch(3);
         doAnswer(invocationOnMock -> {
             threeRequests.countDown();
@@ -176,5 +177,15 @@ public class PrepRequestProcessorMetricsTest extends ZKTestCase {
         Assert.assertThat((long)values.get("outstanding_changes_removed"), greaterThan(0L));
 
         util.shutdownAll();
+    }
+
+    @Test
+    public void testFuck() throws Exception {
+        int index = 0;
+        while (true) {
+            testPrepRequestProcessorMetrics();
+            index++;
+            System.out.println("fuck_run_testPrepRequestProcessorMetrics:index:" + index);
+        }
     }
 }

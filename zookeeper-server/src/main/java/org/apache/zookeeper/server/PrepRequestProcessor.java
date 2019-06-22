@@ -412,7 +412,9 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
                 request.setTxn(new DeleteTxn(path));
                 parentRecord = parentRecord.duplicate(request.getHdr().getZxid());
                 parentRecord.childCount--;
+                System.out.println("fuck_-----------del-1");
                 addChangeRecord(parentRecord);
+                System.out.println("fuck_-----------del-2");
                 addChangeRecord(new ChangeRecord(request.getHdr().getZxid(), path, null, -1, null));
                 break;
             case OpCode.setData:
@@ -428,6 +430,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
                 request.setTxn(new SetDataTxn(path, setDataRequest.getData(), newVersion));
                 nodeRecord = nodeRecord.duplicate(request.getHdr().getZxid());
                 nodeRecord.stat.setVersion(newVersion);
+                System.out.println("fuck_-----------setData");
                 addChangeRecord(nodeRecord);
                 break;
             case OpCode.reconfig:
@@ -606,7 +609,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements
                         }
                     }
                     for (String path2Delete : es) {
-                        System.out.println("fuck_-----------");
+                        System.out.println("fuck_-----------e-node");
                         addChangeRecord(new ChangeRecord(request.getHdr().getZxid(), path2Delete, null, 0, null));
                     }
 
