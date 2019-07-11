@@ -48,6 +48,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.net.ssl.SSLSocket;
 
 import org.apache.zookeeper.common.X509Exception;
+import org.apache.zookeeper.server.ZooKeeperCriticalThread;
+import org.apache.zookeeper.server.ZooKeeperServerListener;
 import org.apache.zookeeper.server.ZooKeeperThread;
 import org.apache.zookeeper.server.quorum.auth.QuorumAuthLearner;
 import org.apache.zookeeper.server.quorum.auth.QuorumAuthServer;
@@ -273,7 +275,7 @@ public class QuorumCnxManager {
                 quorumSaslAuthEnabled);
 
         // Starts listener thread that waits for connection requests
-        listener = new Listener();
+        listener = new Listener((threadName, errorCode) -> self.requestStop());
         listener.setName("QuorumPeerListener");
     }
 
@@ -837,14 +839,32 @@ public class QuorumCnxManager {
     /**
      * Thread to listen on some port
      */
-    public class Listener extends ZooKeeperThread {
+    public class Listener extends ZooKeeperCriticalThread {
 
+        private static final String ELECTION_PORT_BIND_RETRY = "zookeeper.electionPortBindRetry";
+        private static final int DEFAULT_PORT_BIND_MAX_RETRY = 3;
+
+        private final int portBindMaxRetry;
         volatile ServerSocket ss = null;
 
-        public Listener() {
+        public Listener(ZooKeeperServerListener criticalErrorListener) {
             // During startup of thread, thread name will be overridden to
             // specific election address
-            super("ListenerThread");
+            super("ListenerThread", criticalErrorListener);
+
+            // maximum retry count while trying to bind to election port
+            // see ZOOKEEPER-3320 for more details
+            final Integer maxRetry = Integer.getInteger(ELECTION_PORT_BIND_RETRY,
+                                                        DEFAULT_PORT_BIND_MAX_RETRY);
+            if (maxRetry >= 0) {
+                LOG.info("Election port bind maximum retries is {}", maxRetry);
+                portBindMaxRetry = maxRetry;
+            } else {
+                LOG.info("'{}' contains invalid value: {}(must be >= 0). "
+                         + "Use default value of {} instead.",
+                         ELECTION_PORT_BIND_RETRY, maxRetry, DEFAULT_PORT_BIND_MAX_RETRY);
+                portBindMaxRetry = DEFAULT_PORT_BIND_MAX_RETRY;
+            }
         }
 
         /**
@@ -855,7 +875,7 @@ public class QuorumCnxManager {
             int numRetries = 0;
             InetSocketAddress addr;
             Socket client = null;
-            while((!shutdown) && (numRetries < 3)){
+            while((!shutdown) && (numRetries < portBindMaxRetry)){
                 try {
                     if (self.shouldUsePortUnification()) {
                         LOG.info("Creating TLS-enabled quorum server socket");
@@ -882,7 +902,17 @@ public class QuorumCnxManager {
                     setName(addr.toString());
                     ss.bind(addr);
                     while (!shutdown) {
-                        client = ss.accept();
+                        try {
+                            client = ss.accept();
+                        }
+                        catch (IOException e) {
+                            // handle accept errors differently than port bind exceptions,
+                            // because this type of errors(for instance, reach limit
+                            // defined by 'ulimit -n') should not stop leader election cnx thread.
+                            LOG.error("Exception while accepting connection "
+                                      + "on leader election port", e);
+                            continue;
+                        }
 
                         setSockOpts(client);
                         LOG.info("Received connection request "
@@ -919,10 +949,10 @@ public class QuorumCnxManager {
             }
             LOG.info("Leaving listener");
             if (!shutdown) {
-                LOG.error("As I'm leaving the listener thread, "
-                        + "I won't be able to participate in leader "
-                        + "election any longer: "
-                        + self.getElectionAddress());
+                throw new RuntimeException("Leaving the leader election listener thread after "
+                                           + numRetries + " errors. "
+                                           + "Use " + ELECTION_PORT_BIND_RETRY + " property to "
+                                           + "increase retry count.");
             } else if (ss != null) {
                 // Clean up for shutdown.
                 try {
