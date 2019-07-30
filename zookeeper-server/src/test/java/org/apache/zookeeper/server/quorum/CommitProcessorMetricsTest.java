@@ -500,4 +500,20 @@ public class CommitProcessorMetricsTest extends ZKTestCase {
         //there is one session with pending requests
         checkMetrics("pending_session_queue_size", 1l, 2l, 1.333d, 3, 4);
     }
+
+    @Test
+    public void testFuck() {
+        int index = 0;
+        while(true) {
+            try {
+                testConcurrentRequestProcessingInCommitProcessor();
+                Thread.sleep(200);
+                System.out.println("fuck_index:" + (++index));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
 }

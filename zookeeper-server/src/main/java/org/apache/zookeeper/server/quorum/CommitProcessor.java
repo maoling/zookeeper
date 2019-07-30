@@ -426,9 +426,11 @@ public class CommitProcessor extends ZooKeeperCriticalThread implements
 
     protected void waitForEmptyPool() throws InterruptedException {
         int numRequestsInProcess = numRequestsProcessing.get();
+        System.out.println("fuck_numRequestsInProcess:" + numRequestsInProcess);
         if (numRequestsInProcess != 0) {
             ServerMetrics.getMetrics().CONCURRENT_REQUEST_PROCESSING_IN_COMMIT_PROCESSOR.add(
                     numRequestsInProcess);
+            //System.out.println("fuck_CONCURRENT_REQUEST_PROCESSING_IN_COMMIT_PROCESSOR:" + ServerMetrics.getMetrics().CONCURRENT_REQUEST_PROCESSING_IN_COMMIT_PROCESSOR);
         }
 
         long startWaitTime = Time.currentElapsedTime();
