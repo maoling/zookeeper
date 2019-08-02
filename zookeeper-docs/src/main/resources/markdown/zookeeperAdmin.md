@@ -1895,6 +1895,185 @@ The AdminServer is enabled by default, but can be disabled by either:
 Note that the TCP four letter word interface is still available if
 the AdminServer is disabled.
 
+* *configuration* :
+    Show the Server configuration parameters
+    
+    ```bash
+    curl http://localhost:8080/commands/configuration
+    {
+      "client_port" : 2181,
+      "data_dir" : "/data/software/zookeeper/zookeeper-one/bin/../../zkdata/version-2",
+      "data_log_dir" : "/data/software/zookeeper/zookeeper-one/bin/../../zkdataLog/version-2",
+      "tick_time" : 2000,
+      "max_client_cnxns" : 60,
+      "min_session_timeout" : 4000,
+      "max_session_timeout" : 40000,
+      "server_id" : 1,
+      "client_port_listen_backlog" : -1,
+      "command" : "configuration",
+      "error" : null
+    }
+    ```
+
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/connection_stat_reset
+    {
+      "command" : "connection_stat_reset",
+      "error" : null
+    }
+    ```
+* *connections* :
+    Information on client connections to server.
+    
+    ```bash
+    curl http://localhost:8080/commands/connections
+    {
+      "connections" : [ {
+        "remote_socket_address" : "127.0.0.1:58842",
+        "interest_ops" : 1,
+        "outstanding_requests" : 0,
+        "packets_received" : 21,
+        "packets_sent" : 21,
+        "session_id" : 72063659418058752,
+        "last_operation" : "PING",
+        "established" : 1564628969122,
+        "session_timeout" : 30000,
+        "last_cxid" : 0,
+        "last_zxid" : 275036820733958,
+        "last_response_time" : 103301840,
+        "last_latency" : 0,
+        "min_latency" : 0,
+        "avg_latency" : 0,
+        "max_latency" : 9
+      } ],
+      "secure_connections" : [ ],
+      "command" : "connections",
+      "error" : null
+    }
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```    
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```
+* *connection_stat_reset* :
+    Reset all connection statistics.
+    
+    ```bash
+    curl http://localhost:8080/commands/
+  
+    ```    
+
 <a name="sc_dataFileManagement"></a>
 
 ### Data File Management
