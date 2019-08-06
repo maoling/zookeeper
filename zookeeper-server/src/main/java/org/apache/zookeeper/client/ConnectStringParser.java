@@ -19,6 +19,7 @@
 package org.apache.zookeeper.client;
 
 import org.apache.zookeeper.common.PathUtils;
+import org.apache.zookeeper.common.Time;
 import org.apache.zookeeper.server.quorum.QuorumPeerConfig.ConfigException;
 import org.apache.zookeeper.server.util.ConfigUtils;
 
