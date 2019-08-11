@@ -115,35 +115,8 @@ public class FinalRequestProcessor implements RequestProcessor {
         if (LOG.isTraceEnabled()) {
             ZooTrace.logRequest(LOG, traceMask, 'E', request, "");
         }
-        ProcessTxnResult rc = null;
-        synchronized (zks.outstandingChanges) {
-            // Need to process local session requests
-            rc = zks.processTxn(request);
 
-            // request.hdr is set for write requests, which are the only ones
-            // that add to outstandingChanges.
-            if (request.getHdr() != null) {
-                TxnHeader hdr = request.getHdr();
-                long zxid = hdr.getZxid();
-                while (!zks.outstandingChanges.isEmpty()
-                       && zks.outstandingChanges.peek().zxid <= zxid) {
-                    ChangeRecord cr = zks.outstandingChanges.remove();
-                    ServerMetrics.getMetrics().OUTSTANDING_CHANGES_REMOVED.add(1);
-                    if (cr.zxid < zxid) {
-                        LOG.warn("Zxid outstanding " + cr.zxid
-                                 + " is less than current " + zxid);
-                    }
-                    if (zks.outstandingChangesForPath.get(cr.path) == cr) {
-                        zks.outstandingChangesForPath.remove(cr.path);
-                    }
-                }
-            }
-
-            // do not add non quorum packets to the queue.
-            if (request.isQuorum()) {
-                zks.getZKDatabase().addCommittedProposal(request);
-            }
-        }
+        ProcessTxnResult rc = zks.processTxn(request);
 
         // ZOOKEEPER-558:
         // In some cases the server does not close the connection (e.g., closeconn buffer
