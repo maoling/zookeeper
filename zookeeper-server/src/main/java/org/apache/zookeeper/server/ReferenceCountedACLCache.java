@@ -103,7 +103,7 @@ public class ReferenceCountedACLCache {
         clear();
         int i = ia.readInt("map");
 
-        LinkedHashMap<Long, List<ACL>> deserializedMap = new LinkedHashMap<Long, List<ACL>>();
+        Map<Long, List<ACL>> clonedDeserializedMap = new LinkedHashMap<>();
         // keep read operations out of synchronization block
         while (i > 0) {
             Long val = ia.readLong("long");
@@ -119,12 +119,12 @@ public class ReferenceCountedACLCache {
                 j.incr();
             }
 
-            deserializedMap.put(val, aclList);
+            clonedDeserializedMap.put(val, aclList);
             i--;
         }
 
         synchronized (this) {
-            for (Map.Entry<Long, List<ACL>> entry : deserializedMap.entrySet()) {
+            for (Map.Entry<Long, List<ACL>> entry : clonedDeserializedMap.entrySet()) {
                 Long val = entry.getKey();
                 List<ACL> aclList = entry.getValue();
                 if (aclIndex < val) {
@@ -141,7 +141,7 @@ public class ReferenceCountedACLCache {
     public void serialize(OutputArchive oa) throws IOException {
         Map<Long, List<ACL>> clonedLongKeyMap;
         synchronized (this) {
-            clonedLongKeyMap = new HashMap<Long, List<ACL>>(longKeyMap);
+            clonedLongKeyMap = new HashMap<>(longKeyMap);
         }
         oa.writeInt(clonedLongKeyMap.size(), "map");
         for (Map.Entry<Long, List<ACL>> val : clonedLongKeyMap.entrySet()) {
