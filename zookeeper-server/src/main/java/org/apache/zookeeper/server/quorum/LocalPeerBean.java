@@ -122,4 +122,8 @@ public class LocalPeerBean extends ServerBean implements LocalPeerMXBean {
         return peer.isLeader(peer.getId());
     }
 
+    @Override
+    public int getMaxCnxns() {
+        return peer.getMaxCnxns();
+    }
 }

@@ -2060,4 +2060,16 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         return rv;
     }
 
+    /** gets maximum number of connections in ZooKeeper */
+    public int getMaxCnxns() {
+        if (serverCnxnFactory != null) {
+            return serverCnxnFactory.getMaxCnxns();
+        }
+        if (secureServerCnxnFactory != null) {
+            return secureServerCnxnFactory.getMaxCnxns();
+        }
+        // default
+        return ServerCnxnFactory.ZOOKEEPER_MAX_CONNECTION_DEFAULT;
+    }
+
 }

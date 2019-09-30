@@ -2468,4 +2468,13 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
         }
     }
 
+    public int getMaxCnxns() {
+        if (cnxnFactory != null) {
+            return cnxnFactory.getMaxCnxns();
+        }
+        if (secureCnxnFactory != null) {
+            return secureCnxnFactory.getMaxCnxns();
+        }
+        return ServerCnxnFactory.ZOOKEEPER_MAX_CONNECTION_DEFAULT;
+    }
 }
