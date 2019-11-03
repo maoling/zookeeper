@@ -20,7 +20,9 @@ package org.apache.zookeeper.cli;
 
 import java.io.PrintStream;
 import java.util.Map;
+import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.ZooKeeperMain;
 
 /**
  * base class for all CLI commands
@@ -71,13 +73,13 @@ public abstract class CliCommand {
         this.zk = zk;
     }
 
-    /**
-     * Set the helpers instance
-     * @param helpers instance
-     */
-    public void setHelpers(Helpers helpers) {
-        this.helpers = helpers;
-    }
+//    /**
+//     * Set the helpers instance
+//     * @param helpers instance
+//     */
+//    public void setHelpers(Helpers helpers) {
+//        this.helpers = helpers;
+//    }
 
     /**
      * get the string used to call this command
@@ -127,3 +129,15 @@ public abstract class CliCommand {
     public abstract boolean exec() throws CliException;
 
 }
+
+///**
+// * Various helpers for CLI commands
+// */
+//interface Helpers {
+//    /**
+//     * Return a new watcher that respects settings such as {@link ZooKeeperMain#getPrintWatches()}
+//     *
+//     * @return new watcher
+//     */
+//    Watcher newWatcher();
+//}

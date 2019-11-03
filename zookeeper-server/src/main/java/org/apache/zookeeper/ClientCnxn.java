@@ -1043,10 +1043,12 @@ public class ClientCnxn {
                             // are used, use the old version of SetWatches
                             record = new SetWatches(setWatchesLastZxid, dataWatchesBatch, existWatchesBatch, childWatchesBatch);
                             opcode = OpCode.setWatches;
+                            LOG.info("fuck_ClientCnxn_:" + OpCode.setWatches);
                         } else {
                             record = new SetWatches2(setWatchesLastZxid, dataWatchesBatch, existWatchesBatch,
                                     childWatchesBatch, persistentWatchesBatch, persistentRecursiveWatchesBatch);
                             opcode = OpCode.setWatches2;
+                            LOG.info("fuck_ClientCnxn_:" + OpCode.setWatches + " has persistent watchers ");
                         }
                         RequestHeader header = new RequestHeader(-8, opcode);
                         Packet packet = new Packet(header, new ReplyHeader(), record, null, null);

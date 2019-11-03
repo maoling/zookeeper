@@ -3154,6 +3154,11 @@ public class ZooKeeper implements AutoCloseable {
         removeWatches(ZooDefs.OpCode.removeWatches, path, null, watcherType, local, cb, ctx);
     }
 
+    public void addWatch(String basePath, boolean watcher, AddWatchMode mode) throws KeeperException, InterruptedException {
+        addWatch(basePath, watcher ? watchManager.defaultWatcher : null, mode);
+    }
+
+
     /**
      * Add a watch to the given znode using the given mode. Note: not all
      * watch types can be set with this method. Only the modes available

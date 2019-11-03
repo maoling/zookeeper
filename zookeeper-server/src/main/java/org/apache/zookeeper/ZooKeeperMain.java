@@ -52,7 +52,6 @@ import org.apache.zookeeper.cli.GetAllChildrenNumberCommand;
 import org.apache.zookeeper.cli.GetCommand;
 import org.apache.zookeeper.cli.GetConfigCommand;
 import org.apache.zookeeper.cli.GetEphemeralsCommand;
-import org.apache.zookeeper.cli.Helpers;
 import org.apache.zookeeper.cli.ListQuotaCommand;
 import org.apache.zookeeper.cli.Ls2Command;
 import org.apache.zookeeper.cli.LsCommand;
@@ -90,12 +89,12 @@ public class ZooKeeperMain {
     protected ZooKeeper zk;
     protected String host = "";
 
-    private final Helpers helpers = new Helpers() {
-        @Override
-        public Watcher newWatcher() {
-            return new MyWatcher();
-        }
-    };
+//    public final Helpers helpers = new Helpers() {
+//        @Override
+//        public Watcher newWatcher() {
+//            return new MyWatcher();
+//        }
+//    };
 
     public boolean getPrintWatches() {
         return printWatches;
@@ -447,7 +446,7 @@ public class ZooKeeperMain {
         CliCommand cliCmd = commandMapCli.get(cmd);
         if (cliCmd != null) {
             cliCmd.setZk(zk);
-            cliCmd.setHelpers(helpers);
+            //cliCmd.setHelpers(helpers);
             watch = cliCmd.parse(args).exec();
         } else if (!commandMap.containsKey(cmd)) {
             usage();

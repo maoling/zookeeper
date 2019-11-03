@@ -73,7 +73,8 @@ public class WatchManager implements IWatchManager {
             LOG.debug("Ignoring addWatch with closed cnxn");
             return false;
         }
-
+        LOG.info("fuck_enter_WatchManager_addWatch:watchTable"+watchTable.toString()
+                +", watch2Paths:" + watch2Paths.toString());
         Set<Watcher> list = watchTable.get(path);
         if (list == null) {
             // don't waste memory if there are few watches on a node
@@ -85,6 +86,7 @@ public class WatchManager implements IWatchManager {
         list.add(watcher);
 
         Set<String> paths = watch2Paths.get(watcher);
+        LOG.info("fuck_enter_WatchManager_addWatch:paths:" + paths.toString());
         if (paths == null) {
             // cnxns typically have many watches, so use default cap here
             paths = new HashSet<>();
@@ -121,6 +123,7 @@ public class WatchManager implements IWatchManager {
 
     @Override
     public WatcherOrBitSet triggerWatch(String path, EventType type, WatcherOrBitSet supress) {
+        LOG.info("fuck_enter_WatchManager_triggerWatch");
         WatchedEvent e = new WatchedEvent(type, KeeperState.SyncConnected, path);
         Set<Watcher> watchers = new HashSet<>();
         PathParentIterator pathParentIterator = getPathParentIterator(path);

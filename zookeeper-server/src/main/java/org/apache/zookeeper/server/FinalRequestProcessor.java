@@ -386,6 +386,7 @@ public class FinalRequestProcessor implements RequestProcessor {
             }
             case OpCode.setWatches2: {
                 lastOp = "STW2";
+                LOG.info("fuck_fina_processor_I_got_OpCode.setWatches2");
                 SetWatches2 setWatches = new SetWatches2();
                 // TODO we really should not need this
                 request.request.rewind();
@@ -402,6 +403,7 @@ public class FinalRequestProcessor implements RequestProcessor {
             }
             case OpCode.addWatch: {
                 lastOp = "ADDW";
+                LOG.info("fuck_fina_processor_I_got_OpCode.addWatch");
                 AddWatchRequest addWatcherRequest = new AddWatchRequest();
                 ByteBufferInputStream.byteBuffer2Record(request.request,
                         addWatcherRequest);
