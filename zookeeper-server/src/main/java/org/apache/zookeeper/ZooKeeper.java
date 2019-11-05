@@ -1427,6 +1427,7 @@ public class ZooKeeper implements AutoCloseable {
             sessionId,
             sessionPasswd,
             canBeReadOnly);
+        LOG.info("fuck_init_ClientCnxn_in_the_zookeeper");
         cnxn.seenRwServerBefore = true; // since user has provided sessionId
         cnxn.start();
     }

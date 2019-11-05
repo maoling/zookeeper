@@ -30,7 +30,6 @@ import org.apache.zookeeper.ZooKeeperMain;
 public abstract class CliCommand {
 
     protected ZooKeeper zk;
-    protected Helpers helpers;
     protected PrintStream out;
     protected PrintStream err;
     private String cmdStr;

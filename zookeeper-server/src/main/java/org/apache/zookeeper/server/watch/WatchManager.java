@@ -86,13 +86,12 @@ public class WatchManager implements IWatchManager {
         list.add(watcher);
 
         Set<String> paths = watch2Paths.get(watcher);
-        LOG.info("fuck_enter_WatchManager_addWatch:paths:" + paths.toString());
         if (paths == null) {
             // cnxns typically have many watches, so use default cap here
             paths = new HashSet<>();
             watch2Paths.put(watcher, paths);
         }
-
+        LOG.info("fuck_enter_WatchManager_addWatch:paths:" + paths.toString());
         watcherModeManager.setWatcherMode(watcher, path, watcherMode);
 
         return paths.add(path);
@@ -129,6 +128,8 @@ public class WatchManager implements IWatchManager {
         PathParentIterator pathParentIterator = getPathParentIterator(path);
         synchronized (this) {
             for (String localPath : pathParentIterator.asIterable()) {
+                LOG.info("fuck_WatchManager_Server_triggerWatch:watcher,pathParentIterator.asIterable()="+pathParentIterator.asIterable()
+                + ",localPath="+ localPath);
                 Set<Watcher> thisWatchers = watchTable.get(localPath);
                 if (thisWatchers == null || thisWatchers.isEmpty()) {
                     continue;
@@ -137,6 +138,10 @@ public class WatchManager implements IWatchManager {
                 while (iterator.hasNext()) {
                     Watcher watcher = iterator.next();
                     WatcherMode watcherMode = watcherModeManager.getWatcherMode(watcher, localPath);
+                    LOG.info("fuck_WatchManager_Server_triggerWatch:watcher" + watcher.toString()
+                    +", watcherMode="+watcherMode+",watcherMode.isRecursive()="+watcherMode.isRecursive()
+                    +",pathParentIterator.atParentPath()="+pathParentIterator.atParentPath()
+                    +",watcherMode.isPersistent()="+watcherMode.isPersistent());
                     if (watcherMode.isRecursive()) {
                         if (type != EventType.NodeChildrenChanged) {
                             watchers.add(watcher);

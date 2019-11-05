@@ -502,6 +502,7 @@ public class ClientCnxn {
             }
             WatcherSetEventPair pair = new WatcherSetEventPair(watchers, event);
             // queue the pair (watch set & event) for later processing
+            LOG.info("fuck_queue the pair (watch set & event) for later processing into waitingEvents queue");
             waitingEvents.add(pair);
         }
 
@@ -534,6 +535,7 @@ public class ClientCnxn {
             try {
                 isRunning = true;
                 while (true) {
+                    LOG.info("fuck_Event_from_waitingEvents.take()_while_(true) ;");
                     Object event = waitingEvents.take();
                     if (event == eventOfDeath) {
                         wasKilled = true;
@@ -563,6 +565,7 @@ public class ClientCnxn {
                     WatcherSetEventPair pair = (WatcherSetEventPair) event;
                     for (Watcher watcher : pair.watchers) {
                         try {
+                            LOG.info("fuck_start_key_point_processEvent:" + pair.event.toString());
                             watcher.process(pair.event);
                         } catch (Throwable t) {
                             LOG.error("Error while calling watcher ", t);
@@ -880,6 +883,7 @@ public class ClientCnxn {
                 LOG.debug("Got notification session id: 0x{}", Long.toHexString(sessionId));
                 WatcherEvent event = new WatcherEvent();
                 event.deserialize(bbia, "response");
+                LOG.info("fuck_event.deserialize()");
 
                 // convert from a server path to a client path
                 if (chrootPath != null) {
@@ -898,6 +902,7 @@ public class ClientCnxn {
 
                 WatchedEvent we = new WatchedEvent(event);
                 LOG.debug("Got {} for session id 0x{}", we, Long.toHexString(sessionId));
+                LOG.info("fuck_put_the_event_to_the_queue");
                 eventThread.queueEvent(we);
                 return;
             }
@@ -1043,12 +1048,12 @@ public class ClientCnxn {
                             // are used, use the old version of SetWatches
                             record = new SetWatches(setWatchesLastZxid, dataWatchesBatch, existWatchesBatch, childWatchesBatch);
                             opcode = OpCode.setWatches;
-                            LOG.info("fuck_ClientCnxn_:" + OpCode.setWatches);
+                            LOG.info("fuck_ClientCnxn: OpCode.setWatches");
                         } else {
                             record = new SetWatches2(setWatchesLastZxid, dataWatchesBatch, existWatchesBatch,
                                     childWatchesBatch, persistentWatchesBatch, persistentRecursiveWatchesBatch);
                             opcode = OpCode.setWatches2;
-                            LOG.info("fuck_ClientCnxn_:" + OpCode.setWatches + " has persistent watchers ");
+                            LOG.info("fuck_ClientCnxn: OpCode.setWatches has persistent watchers ");
                         }
                         RequestHeader header = new RequestHeader(-8, opcode);
                         Packet packet = new Packet(header, new ReplyHeader(), record, null, null);
@@ -1162,6 +1167,7 @@ public class ClientCnxn {
             final int MAX_SEND_PING_INTERVAL = 10000; //10 seconds
             InetSocketAddress serverAddress = null;
             while (state.isAlive()) {
+                LOG.info("fuck_ClientCnxn_SendThread.run_state.isAlive()");
                 try {
                     if (!clientCnxnSocket.isConnected()) {
                         // don't re-establish connection if we are closing
@@ -1253,7 +1259,7 @@ public class ClientCnxn {
                         }
                         to = Math.min(to, pingRwTimeout - idlePingRwServer);
                     }
-
+                    LOG.info("fuck_ClientCnxn_SendThread.run_before_clientCnxnSocket.doTransport");
                     clientCnxnSocket.doTransport(to, pendingQueue, ClientCnxn.this);
                 } catch (Throwable e) {
                     if (closing) {
@@ -1646,6 +1652,7 @@ public class ClientCnxn {
                 if (h.getType() == OpCode.closeSession) {
                     closing = true;
                 }
+                LOG.info("fuck_ClientCnxn.queuePacket()_before_outgoingQueue.add(packet)");
                 outgoingQueue.add(packet);
             }
         }

@@ -22,11 +22,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.zookeeper.ClientCnxn;
 import org.apache.zookeeper.Watcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class WatcherModeManager {
     private final Map<Key, WatcherMode> watcherModes = new ConcurrentHashMap<>();
     private final AtomicInteger recursiveQty = new AtomicInteger(0);
+    private static final Logger LOG = LoggerFactory.getLogger(WatcherModeManager.class);
 
     private static class Key {
         private final Watcher watcher;
@@ -61,6 +65,8 @@ class WatcherModeManager {
     }
 
     void setWatcherMode(Watcher watcher, String path, WatcherMode mode) {
+        LOG.info("fuck_WatcherModeManager.setWatcherMode,watcher="+watcher.toString()
+        +",path="+path+",WatcherMode="+mode);
         if (mode == WatcherMode.DEFAULT_WATCHER_MODE) {
             removeWatcher(watcher, path);
         } else {
@@ -85,6 +91,8 @@ class WatcherModeManager {
         if (oldMode == null) {
             oldMode = WatcherMode.DEFAULT_WATCHER_MODE;
         }
+        LOG.info("fuck_WatcherModeManager.setWatcherMode,oldMode="+oldMode.toString()
+                +",newMode="+newMode);
         if (oldMode.isRecursive() != newMode.isRecursive()) {
             if (newMode.isRecursive()) {
                 recursiveQty.incrementAndGet();
@@ -92,5 +100,6 @@ class WatcherModeManager {
                 recursiveQty.decrementAndGet();
             }
         }
+        LOG.info("fuck_WatcherModeManager.setWatcherMode,recursiveQty="+recursiveQty);
     }
 }

@@ -89,13 +89,6 @@ public class ZooKeeperMain {
     protected ZooKeeper zk;
     protected String host = "";
 
-//    public final Helpers helpers = new Helpers() {
-//        @Override
-//        public Watcher newWatcher() {
-//            return new MyWatcher();
-//        }
-//    };
-
     public boolean getPrintWatches() {
         return printWatches;
     }

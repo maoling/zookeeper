@@ -93,6 +93,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
                     updateLastHeard();
                     initialized = true;
                 } else {
+                    LOG.info("fuck_ClientCnxnSocketNIO_doIO_sendThread.readResponse");
                     sendThread.readResponse(incomingBuffer);
                     lenBuffer.clear();
                     incomingBuffer = lenBuffer;
@@ -158,6 +159,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
         }
         // If we've already starting sending the first packet, we better finish
         if (outgoingQueue.getFirst().bb != null || !tunneledAuthInProgres) {
+            LOG.info("fuck_ClientCnxnSocketNIO.findSendablePacket_outgoingQueue.getFirst()");
             return outgoingQueue.getFirst();
         }
         // Since client's authentication with server is in progress,
@@ -345,6 +347,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
                     sendThread.primeConnection();
                 }
             } else if ((k.readyOps() & (SelectionKey.OP_READ | SelectionKey.OP_WRITE)) != 0) {
+                LOG.info("fuck_ClientCnxnSocketNIO.doTransport_before_doIO(pendingQueue, cnxn)");
                 doIO(pendingQueue, cnxn);
             }
         }
