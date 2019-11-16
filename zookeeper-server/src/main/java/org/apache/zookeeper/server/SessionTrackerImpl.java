@@ -153,12 +153,14 @@ public class SessionTrackerImpl extends ZooKeeperCriticalThread implements Sessi
         try {
             while (running) {
                 long waitTime = sessionExpiryQueue.getWaitTime();
+                System.out.println("fuck_SessionTrackerImpl_run_loop!!!,waitTime="+waitTime);
                 if (waitTime > 0) {
                     Thread.sleep(waitTime);
                     continue;
                 }
 
                 for (SessionImpl s : sessionExpiryQueue.poll()) {
+                    System.out.println("fuck_sessionExpiryQueue_one_pro_close_session:" + s.toString());
                     ServerMetrics.getMetrics().STALE_SESSIONS_EXPIRED.add(1);
                     setSessionClosing(s.sessionId);
                     expirer.expire(s);
@@ -171,6 +173,7 @@ public class SessionTrackerImpl extends ZooKeeperCriticalThread implements Sessi
     }
 
     public synchronized boolean touchSession(long sessionId, int timeout) {
+        System.out.println("fuck_SessionTrackerImpl_touchSession");
         SessionImpl s = sessionsById.get(sessionId);
 
         if (s == null) {

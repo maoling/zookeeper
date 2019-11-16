@@ -51,6 +51,9 @@ public class ExpiryQueue<E> {
     }
 
     private long roundToNextInterval(long time) {
+        System.out.println("fuck_time:"+time+",time / expirationInterval="+(time / expirationInterval)
+        +",expirationInterval="+expirationInterval);
+        System.out.println("fuck_roundToNextInterval:"+((time / expirationInterval + 1) * expirationInterval));
         return (time / expirationInterval + 1) * expirationInterval;
     }
 
@@ -84,10 +87,14 @@ public class ExpiryQueue<E> {
     public Long update(E elem, int timeout) {
         Long prevExpiryTime = elemMap.get(elem);
         long now = Time.currentElapsedTime();
+        System.out.println("fuck_before_ExpiryQueue_(update_touch).prevExpiryTime="+
+                prevExpiryTime+",now="+now +",timeout="+timeout);
         Long newExpiryTime = roundToNextInterval(now + timeout);
 
+        System.out.println("fuck_before_ExpiryQueue_(update_touch).newExpiryTime="+newExpiryTime);
+
         if (newExpiryTime.equals(prevExpiryTime)) {
-            // No change, so nothing to update
+            System.out.println("fuck No change, so nothing to update");
             return null;
         }
 
@@ -104,6 +111,7 @@ public class ExpiryQueue<E> {
             }
         }
         set.add(elem);
+        System.out.println("fuck_trigger_session_from_old_to_new,set=" + set.toString());
 
         // Map the elem to the new expiry time. If a different previous
         // mapping was present, clean up the previous expiry bucket.
@@ -135,8 +143,10 @@ public class ExpiryQueue<E> {
      *         ready
      */
     public Set<E> poll() {
+        System.out.println("fuck_ExpiryQueue_enter_poll");
         long now = Time.currentElapsedTime();
         long expirationTime = nextExpirationTime.get();
+        System.out.println("fuck_ExpiryQueue.poll----------------,expirationTime="+expirationTime+",now="+now);
         if (now < expirationTime) {
             return Collections.emptySet();
         }
@@ -147,8 +157,10 @@ public class ExpiryQueue<E> {
             set = expiryMap.remove(expirationTime);
         }
         if (set == null) {
+            System.out.println("fuck_poll_returnCollections.emptySet()");
             return Collections.emptySet();
         }
+        System.out.println("fuck_poll_return:" + set.toString());
         return set;
     }
 
