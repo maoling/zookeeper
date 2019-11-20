@@ -119,7 +119,7 @@ public class EpochWriteFailureTest extends QuorumPeerTestBase {
         }
     }
 
-    
+
     private static class MockTestQPMain extends TestQPMain {
         @Override
         public void runFromConfig(QuorumPeerConfig config)
