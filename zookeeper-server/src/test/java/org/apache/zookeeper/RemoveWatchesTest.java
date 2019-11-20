@@ -18,12 +18,16 @@
 
 package org.apache.zookeeper;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,11 +41,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.zookeeper.KeeperException.Code;
-import org.apache.zookeeper.KeeperException.NoWatcherException;
 import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.Watcher.WatcherType;
 import org.apache.zookeeper.ZooDefs.Ids;
-import org.apache.zookeeper.client.ZKClientConfig;
 import org.apache.zookeeper.server.ServerCnxn;
 import org.apache.zookeeper.test.ClientBase;
 import org.junit.Test;
@@ -657,7 +659,9 @@ public class RemoveWatchesTest extends ClientBase {
     @Test(timeout = 90000)
     public void testNoWatcherServerException() throws InterruptedException, IOException, TimeoutException {
         CountdownWatcher watcher = new CountdownWatcher();
-        MyZooKeeper zk = new MyZooKeeper(hostPort, CONNECTION_TIMEOUT, watcher);
+        ZooKeeper zk = spy(new ZooKeeper(hostPort, CONNECTION_TIMEOUT, watcher));
+        MyWatchManager watchManager = new MyWatchManager(false, watcher);
+        doReturn(watchManager).when(zk).getWatchManager();
         boolean nw = false;
 
         watcher.waitForConnected(CONNECTION_TIMEOUT);
@@ -670,8 +674,33 @@ public class RemoveWatchesTest extends ClientBase {
             }
         }
 
-        assertTrue("Server didn't return NOWATCHER", zk.getRemoveWatchesRC() == Code.NOWATCHER.intValue());
-        assertTrue("NoWatcherException didn't happen", nw);
+        assertThat("Server didn't return NOWATCHER", watchManager.lastReturnCode, is(Code.NOWATCHER.intValue()));
+        assertThat("NoWatcherException didn't happen", nw, is(true));
+    }
+
+    private static class MyWatchManager extends ZKWatchManager {
+
+        int lastReturnCode;
+
+        MyWatchManager(boolean disableAutoWatchReset, Watcher defaultWatcher) {
+            super(disableAutoWatchReset, defaultWatcher);
+        }
+
+        void containsWatcher(String path, Watcher watcher, WatcherType watcherType) {
+            // prevent contains watcher
+        }
+
+        @Override
+        protected boolean removeWatches(
+            Map<String, Set<Watcher>> pathVsWatcher,
+            Watcher watcher,
+            String path,
+            boolean local,
+            int rc,
+            Set<Watcher> removedWatchers) {
+            lastReturnCode = rc;
+            return false;
+        }
     }
 
     /**
@@ -918,53 +947,6 @@ public class RemoveWatchesTest extends ClientBase {
         assertTrue("Didn't remove data watcher", rmWatchCount.await(CONNECTION_TIMEOUT, TimeUnit.MILLISECONDS));
         assertFalse("Server session is still a watcher after removal", isServerSessionWatcher(zk2.getSessionId(), "/node1", WatcherType.Data));
         assertEquals("Received watch notification after removal!", 2, watchCount.getCount());
-    }
-
-    /* a mocked ZK class that doesn't do client-side verification
-     * before/after calling removeWatches */
-    private class MyZooKeeper extends ZooKeeper {
-
-        class MyWatchManager extends ZKWatchManager {
-
-            public MyWatchManager(boolean disableAutoWatchReset) {
-                super(disableAutoWatchReset);
-            }
-
-            public int lastrc;
-
-            /* Pretend that any watcher exists */
-            void containsWatcher(String path, Watcher watcher, WatcherType watcherType) throws NoWatcherException {
-            }
-
-            /* save the return error code by the server */
-            protected boolean removeWatches(
-                Map<String, Set<Watcher>> pathVsWatcher,
-                Watcher watcher,
-                String path,
-                boolean local,
-                int rc,
-                Set<Watcher> removedWatchers) throws KeeperException {
-                lastrc = rc;
-                return false;
-            }
-
-        }
-
-        public MyZooKeeper(String hp, int timeout, Watcher watcher) throws IOException {
-            super(hp, timeout, watcher, false);
-        }
-
-        private MyWatchManager myWatchManager;
-
-        protected ZKWatchManager defaultWatchManager() {
-            myWatchManager = new MyWatchManager(getClientConfig().getBoolean(ZKClientConfig.DISABLE_AUTO_WATCH_RESET));
-            return myWatchManager;
-        }
-
-        public int getRemoveWatchesRC() {
-            return myWatchManager.lastrc;
-        }
-
     }
 
     private class MyWatcher implements Watcher {

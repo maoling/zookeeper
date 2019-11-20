@@ -85,10 +85,9 @@ public class NettyServerCnxnTest extends ClientBase {
     public void testSendCloseSession() throws Exception {
         assertTrue("Didn't instantiate ServerCnxnFactory with NettyServerCnxnFactory!", serverFactory instanceof NettyServerCnxnFactory);
 
-        final ZooKeeper zk = createClient();
-        final ZooKeeperServer zkServer = serverFactory.getZooKeeperServer();
-        final String path = "/a";
-        try {
+        try (ZooKeeper zk = createClient()) {
+            final ZooKeeperServer zkServer = serverFactory.getZooKeeperServer();
+            final String path = "/a";
             // make sure zkclient works
             zk.create(path, "test".getBytes(StandardCharsets.UTF_8), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
             // set on watch
@@ -110,8 +109,6 @@ public class NettyServerCnxnTest extends ClientBase {
             }
             // make sure the watch is removed when the connection closed
             assertEquals(0, zkServer.getZKDatabase().getDataTree().getWatchCount());
-        } finally {
-            zk.close();
         }
     }
 
