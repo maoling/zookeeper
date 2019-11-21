@@ -636,7 +636,7 @@ public class ZooKeeper implements AutoCloseable {
             sessionTimeout,
             watcher);
 
-        this.clientConfig = clientConfig != null ? clientConfig : new ZKClientConfig();;
+        this.clientConfig = clientConfig != null ? clientConfig : new ZKClientConfig();
         this.hostProvider = aHostProvider;
         this.defaultWatcher = watcher;
 
