@@ -1247,7 +1247,8 @@ public class DataTree {
         Long expiration = time + EphemeralType.TTL.getValue(ephemeralOwner);
         updateInvertedTtlNode(path, ttls.put(path, expiration));
 
-        Collection<String> nodes = invertedTtls.computeIfAbsent(expiration, __ -> Collections.newSetFromMap(new ConcurrentHashMap<>()));
+        Collection<String> nodes = invertedTtls.computeIfAbsent(expiration, __ ->
+                Collections.newSetFromMap(new ConcurrentHashMap<>()));
         nodes.add(path);
     }
 
