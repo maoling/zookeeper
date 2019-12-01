@@ -168,7 +168,7 @@ public class ZooKeeper implements AutoCloseable {
 
     protected final HostProvider hostProvider;
 
-    private final Watcher defaultWatcher;
+    //private final Watcher defaultWatcher;
 
     /**
      * This function allows a client to update the connection string by providing
@@ -638,7 +638,7 @@ public class ZooKeeper implements AutoCloseable {
 
         this.clientConfig = clientConfig != null ? clientConfig : new ZKClientConfig();
         this.hostProvider = aHostProvider;
-        this.defaultWatcher = watcher;
+        //this.getWatchManager().getDefaultWatcher()= watcher;
 
         ConnectStringParser connectStringParser = new ConnectStringParser(connectString);
 
@@ -1035,7 +1035,6 @@ public class ZooKeeper implements AutoCloseable {
 
         this.clientConfig = clientConfig != null ? clientConfig : new ZKClientConfig();
         this.hostProvider = aHostProvider;
-        this.defaultWatcher = watcher;
 
         ConnectStringParser connectStringParser = new ConnectStringParser(connectString);
 
@@ -1885,7 +1884,7 @@ public class ZooKeeper implements AutoCloseable {
      * @throws InterruptedException If the server transaction is interrupted.
      */
     public Stat exists(String path, boolean watch) throws KeeperException, InterruptedException {
-        return exists(path, watch ? defaultWatcher : null);
+        return exists(path, watch ? getWatchManager().getDefaultWatcher(): null);
     }
 
     /**
@@ -1920,7 +1919,7 @@ public class ZooKeeper implements AutoCloseable {
      * @see #exists(String, boolean)
      */
     public void exists(String path, boolean watch, StatCallback cb, Object ctx) {
-        exists(path, watch ? defaultWatcher : null, cb, ctx);
+        exists(path, watch ? getWatchManager().getDefaultWatcher() : null, cb, ctx);
     }
 
     /**
@@ -1989,7 +1988,7 @@ public class ZooKeeper implements AutoCloseable {
      * @throws InterruptedException If the server transaction is interrupted.
      */
     public byte[] getData(String path, boolean watch, Stat stat) throws KeeperException, InterruptedException {
-        return getData(path, watch ? defaultWatcher : null, stat);
+        return getData(path, watch ? getWatchManager().getDefaultWatcher(): null, stat);
     }
 
     /**
@@ -2024,7 +2023,7 @@ public class ZooKeeper implements AutoCloseable {
      * @see #getData(String, boolean, Stat)
      */
     public void getData(String path, boolean watch, DataCallback cb, Object ctx) {
-        getData(path, watch ? defaultWatcher : null, cb, ctx);
+        getData(path, watch ? getWatchManager().getDefaultWatcher(): null, cb, ctx);
     }
 
     /**
@@ -2110,7 +2109,7 @@ public class ZooKeeper implements AutoCloseable {
      * @throws InterruptedException If the server transaction is interrupted.
      */
     public byte[] getConfig(boolean watch, Stat stat) throws KeeperException, InterruptedException {
-        return getConfig(watch ? defaultWatcher : null, stat);
+        return getConfig(watch ? getWatchManager().getDefaultWatcher(): null, stat);
     }
 
     /**
@@ -2119,7 +2118,7 @@ public class ZooKeeper implements AutoCloseable {
      * @see #getData(String, boolean, Stat)
      */
     public void getConfig(boolean watch, DataCallback cb, Object ctx) {
-        getConfig(watch ? defaultWatcher : null, cb, ctx);
+        getConfig(watch ? getWatchManager().getDefaultWatcher(): null, cb, ctx);
     }
 
     /**
@@ -2376,7 +2375,7 @@ public class ZooKeeper implements AutoCloseable {
      * @throws KeeperException If the server signals an error with a non-zero error code.
      */
     public List<String> getChildren(String path, boolean watch) throws KeeperException, InterruptedException {
-        return getChildren(path, watch ? defaultWatcher : null);
+        return getChildren(path, watch ? getWatchManager().getDefaultWatcher(): null);
     }
 
     /**
@@ -2411,7 +2410,7 @@ public class ZooKeeper implements AutoCloseable {
      * @see #getChildren(String, boolean)
      */
     public void getChildren(String path, boolean watch, ChildrenCallback cb, Object ctx) {
-        getChildren(path, watch ? defaultWatcher : null, cb, ctx);
+        getChildren(path, watch ? getWatchManager().getDefaultWatcher(): null, cb, ctx);
     }
 
     /**
@@ -2497,7 +2496,7 @@ public class ZooKeeper implements AutoCloseable {
         String path,
         boolean watch,
         Stat stat) throws KeeperException, InterruptedException {
-        return getChildren(path, watch ? defaultWatcher : null, stat);
+        return getChildren(path, watch ? getWatchManager().getDefaultWatcher(): null, stat);
     }
 
     /**
@@ -2536,7 +2535,7 @@ public class ZooKeeper implements AutoCloseable {
      * @see #getChildren(String, boolean, Stat)
      */
     public void getChildren(String path, boolean watch, Children2Callback cb, Object ctx) {
-        getChildren(path, watch ? defaultWatcher : null, cb, ctx);
+        getChildren(path, watch ? getWatchManager().getDefaultWatcher(): null, cb, ctx);
     }
 
     /**
@@ -2814,7 +2813,7 @@ public class ZooKeeper implements AutoCloseable {
      * @since 3.6.0
      */
     public void addWatch(String basePath, AddWatchMode mode) throws KeeperException, InterruptedException {
-        addWatch(basePath, defaultWatcher, mode);
+        addWatch(basePath, getWatchManager().getDefaultWatcher(), mode);
     }
 
     /**
@@ -2852,7 +2851,7 @@ public class ZooKeeper implements AutoCloseable {
      */
     public void addWatch(String basePath, AddWatchMode mode,
                          VoidCallback cb, Object ctx) {
-        addWatch(basePath, defaultWatcher, mode, cb, ctx);
+        addWatch(basePath, getWatchManager().getDefaultWatcher(), mode, cb, ctx);
     }
 
     private void validateWatcher(Watcher watcher) {

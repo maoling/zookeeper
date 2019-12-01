@@ -56,6 +56,10 @@ class ZKWatchManager implements ClientWatchManager {
         this.defaultWatcher = watcher;
     }
 
+    Watcher getDefaultWatcher() {
+        return this.defaultWatcher;
+    }
+
     List<String> getDataWatchList() {
         synchronized (dataWatches) {
             return new ArrayList<>(dataWatches.keySet());
