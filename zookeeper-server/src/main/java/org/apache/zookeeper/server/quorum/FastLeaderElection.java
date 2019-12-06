@@ -130,6 +130,20 @@ public class FastLeaderElection implements Election {
          * current state of sender
          */ QuorumPeer.ServerState state;
 
+        @Override
+        public String toString() {
+            return "Notification{" +
+                    "version=" + version +
+                    ", leader=" + leader +
+                    ", zxid=" + zxid +
+                    ", electionEpoch=" + electionEpoch +
+                    ", state=" + state +
+                    ", sid=" + sid +
+                    ", qv=" + qv +
+                    ", peerEpoch=" + peerEpoch +
+                    '}';
+        }
+
         /*
          * Address of sender
          */ long sid;
@@ -686,7 +700,7 @@ public class FastLeaderElection implements Election {
                 proposedEpoch,
                 qv.toString().getBytes());
 
-            LOG.debug(
+            LOG.info(
                 "Sending Notification: {} (n.leader), 0x{} (n.zxid), 0x{} (n.round), {} (recipient),"
                     + " {} (myid), 0x{} (n.peerEpoch) ",
                 proposedLeader,
@@ -946,15 +960,21 @@ public class FastLeaderElection implements Election {
                  * the termination time
                  */
                 Notification n = recvqueue.poll(notTimeout, TimeUnit.MILLISECONDS);
-
+                System.out.println("fuck_quorum.FastLeaderElection.lookForLeader Notification:"+
+                        n.toString());
                 /*
                  * Sends more notifications if haven't received enough.
                  * Otherwise processes new notification.
                  */
+                if(System.currentTimeMillis() > 1575542167000L) {
+                    n = null;
+                }
                 if (n == null) {
                     if (manager.haveDelivered()) {
+                        System.out.println("fuck_manager.haveDelivered()_sendNotifications");
                         sendNotifications();
                     } else {
+                        System.out.println("fuck_manager_try_to_connectAll()");
                         manager.connectAll();
                     }
 

@@ -705,7 +705,7 @@ public class QuorumCnxManager {
      */
     synchronized void connectOne(long sid) {
         if (senderWorkerMap.get(sid) != null) {
-            LOG.debug("There is a connection already for server {}", sid);
+            LOG.info("There is a connection already for server {}", sid);
             // since ZOOKEEPER-3188 we can use multiple election addresses to reach a server. It is possible, that the
             // one we are using is already dead and we need to clean-up, so when we will create a new connection
             // then we will choose an other one, which is actually reachable
@@ -723,6 +723,7 @@ public class QuorumCnxManager {
             if (lastCommittedView.containsKey(sid)) {
                 knownId = true;
                 if (connectOne(sid, lastCommittedView.get(sid).electionAddr)) {
+                    System.out.println("fuck_connectOne_1_true");
                     return;
                 }
             }
@@ -732,6 +733,7 @@ public class QuorumCnxManager {
                     || (lastProposedView.get(sid).electionAddr != lastCommittedView.get(sid).electionAddr))) {
                 knownId = true;
                 if (connectOne(sid, lastProposedView.get(sid).electionAddr)) {
+                    System.out.println("fuck_connectOne_2_true");
                     return;
                 }
             }
@@ -750,6 +752,7 @@ public class QuorumCnxManager {
         long sid;
         for (Enumeration<Long> en = queueSendMap.keys(); en.hasMoreElements(); ) {
             sid = en.nextElement();
+            System.out.println("fuck_connectOne(sid):sid:" +sid);
             connectOne(sid);
         }
     }
@@ -758,9 +761,10 @@ public class QuorumCnxManager {
      * Check if all queues are empty, indicating that all messages have been delivered.
      */
     boolean haveDelivered() {
-        for (BlockingQueue<ByteBuffer> queue : queueSendMap.values()) {
-            final int queueSize = queue.size();
-            LOG.debug("Queue size: {}", queueSize);
+        for (Map.Entry<Long, BlockingQueue<ByteBuffer>> entry : queueSendMap.entrySet()) {
+            final int queueSize = entry.getValue().size();
+            LOG.info("Queue size_is_empty_return_haveDelivered_true: {}, sid:{}",
+                    queueSize, entry.getValue().size(), entry.getKey());
             if (queueSize == 0) {
                 return true;
             }
