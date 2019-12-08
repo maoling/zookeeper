@@ -960,15 +960,14 @@ public class FastLeaderElection implements Election {
                  * the termination time
                  */
                 Notification n = recvqueue.poll(notTimeout, TimeUnit.MILLISECONDS);
-                System.out.println("fuck_quorum.FastLeaderElection.lookForLeader Notification:"+
-                        n.toString());
+                if (n != null) {
+                    System.out.println("fuck_quorum.FastLeaderElection.lookForLeader Notification:" +
+                            n.toString());
+                }
                 /*
                  * Sends more notifications if haven't received enough.
                  * Otherwise processes new notification.
                  */
-                if(System.currentTimeMillis() > 1575542167000L) {
-                    n = null;
-                }
                 if (n == null) {
                     if (manager.haveDelivered()) {
                         System.out.println("fuck_manager.haveDelivered()_sendNotifications");

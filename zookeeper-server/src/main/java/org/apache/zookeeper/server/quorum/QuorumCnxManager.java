@@ -622,6 +622,7 @@ public class QuorumCnxManager {
              */
             BlockingQueue<ByteBuffer> bq = queueSendMap.computeIfAbsent(sid, serverId -> new CircularBlockingQueue<>(SEND_CAPACITY));
             addToSendQueue(bq, b);
+            System.out.println("fuck_has_deliever_also_connectOne sid:" + sid);
             connectOne(sid);
         }
     }
