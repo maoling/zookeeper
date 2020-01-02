@@ -65,24 +65,21 @@ public class SyncCommand extends CliCommand {
         CompletableFuture<Integer> cf = new CompletableFuture<>();
 
         try {
-            zk.sync(path, new AsyncCallback.VoidCallback() {
-                public void processResult(int rc, String path, Object ctx) {
-                    cf.complete(rc);
-                }
-            }, null);
+            zk.sync(path, (rc, path1, ctx) -> cf.complete(rc), null);
 
             int resultCode = cf.get(SYNC_TIMEOUT, TimeUnit.MILLISECONDS);
             if (resultCode == 0) {
                 out.println("Sync is OK");
             } else {
-                throw new KeeperException.NoNodeException(path);
+                throw KeeperException.create(KeeperException.Code.get(resultCode));
+                //throw new KeeperException.NoNodeException(path);
             }
         } catch (IllegalArgumentException ex) {
             throw new MalformedPathException(ex.getMessage());
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
             throw new CliWrapperException(ie);
-        } catch (TimeoutException | ExecutionException | KeeperException.NoNodeException ex) {
+        } catch (TimeoutException | ExecutionException | KeeperException ex) {
             throw new CliWrapperException(ex);
         }
 
