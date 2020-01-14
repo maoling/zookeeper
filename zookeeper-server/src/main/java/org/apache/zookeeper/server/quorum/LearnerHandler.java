@@ -694,6 +694,7 @@ public class LearnerHandler extends ZooKeeperThread {
                         si = new Request(null, sessionId, cxid, type, bb, qp.getAuthinfo());
                     }
                     si.setOwner(this);
+                    System.out.println("fuck I'am a leader.learnerMaster.submitLearnerRequest ");
                     learnerMaster.submitLearnerRequest(si);
                     requestsReceived.incrementAndGet();
                     break;

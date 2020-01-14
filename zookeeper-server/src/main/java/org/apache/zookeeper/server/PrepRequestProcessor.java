@@ -1038,6 +1038,7 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements Req
     }
 
     public void processRequest(Request request) {
+        System.out.println();
         request.prepQueueStartTime = Time.currentElapsedTime();
         submittedRequests.add(request);
         ServerMetrics.getMetrics().PREP_PROCESSOR_QUEUED.add(1);

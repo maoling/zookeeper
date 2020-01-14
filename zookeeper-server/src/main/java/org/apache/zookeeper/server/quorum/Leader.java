@@ -922,6 +922,7 @@ public class Leader extends LearnerMaster {
 
         if (p.request != null) {
             toBeApplied.add(p);
+            System.out.println("fuck lead()toBeApplied.add(p):" + toBeApplied.toString());
         }
 
         if (p.request == null) {

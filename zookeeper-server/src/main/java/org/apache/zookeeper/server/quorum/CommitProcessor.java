@@ -543,6 +543,7 @@ public class CommitProcessor extends ZooKeeperCriticalThread implements RequestP
                 processCommitMetrics(request, needCommit(request));
 
                 long timeBeforeFinalProc = Time.currentElapsedTime();
+                System.out.println("fuck I am Commit Processor, will send to nextProcessor. request:" + request.toString());
                 nextProcessor.processRequest(request);
                 if (needCommit(request)) {
                     ServerMetrics.getMetrics().WRITE_FINAL_PROC_TIME
