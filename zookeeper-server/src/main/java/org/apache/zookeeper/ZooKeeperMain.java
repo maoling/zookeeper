@@ -77,17 +77,21 @@ import org.slf4j.LoggerFactory;
 public class ZooKeeperMain {
 
     private static final Logger LOG = LoggerFactory.getLogger(ZooKeeperMain.class);
-    static final Map<String, String> commandMap = new HashMap<String, String>();
-    static final Map<String, CliCommand> commandMapCli = new HashMap<String, CliCommand>();
+    static final Map<String, String> commandMap = new HashMap<>();
+    static final Map<String, CliCommand> commandMapCli = new HashMap<>();
 
     protected MyCommandOptions cl = new MyCommandOptions();
-    protected HashMap<Integer, String> history = new HashMap<Integer, String>();
+    protected List<MyCommandOptions> multiClList = new ArrayList<>();
+    protected HashMap<Integer, String> history = new HashMap<>();
     protected int commandCount = 0;
     protected boolean printWatches = true;
     protected int exitCode = ExitCode.EXECUTION_FINISHED.getValue();
 
     protected ZooKeeper zk;
     protected String host = "";
+
+    private int multiStartIndex = -1;
+    private int multiEndIndex = -1;
 
     public boolean getPrintWatches() {
         return printWatches;
@@ -99,6 +103,7 @@ public class ZooKeeperMain {
         commandMap.put("redo", "cmdno");
         commandMap.put("printwatches", "on|off");
         commandMap.put("quit", "");
+        commandMap.put("multi", "commit|abort");
 
         new CloseCommand().addToMap(commandMapCli);
         new CreateCommand().addToMap(commandMapCli);
@@ -259,6 +264,14 @@ public class ZooKeeperMain {
 
     protected void addToHistory(int i, String cmd) {
         history.put(i, cmd);
+        if (cmd.equals("multi")) {
+            multiStartIndex = i;
+        } else if (cmd.equals("commit")) {
+            multiEndIndex = i;
+        } else if (cmd.equals("abort")) {
+            multiStartIndex = -1;
+            multiEndIndex = -1;
+        }
     }
 
     public static List<String> getCommands() {
@@ -325,6 +338,7 @@ public class ZooKeeperMain {
                 String line;
                 Method readLine = consoleC.getMethod("readLine", String.class);
                 while ((line = (String) readLine.invoke(console, getPrompt())) != null) {
+                    System.out.println("fuck_executeLine:cl-----1:" + cl.toString());
                     executeLine(line);
                 }
             } catch (ClassNotFoundException
@@ -343,6 +357,7 @@ public class ZooKeeperMain {
 
                 String line;
                 while ((line = br.readLine()) != null) {
+                    System.out.println("fuck_executeLine:cl2:" + cl.toString());
                     executeLine(line);
                 }
             }
@@ -354,12 +369,20 @@ public class ZooKeeperMain {
     }
 
     public void executeLine(String line) throws CliException, InterruptedException, IOException {
-        if (!line.equals("")) {
-            cl.parseCommand(line);
-            addToHistory(commandCount, line);
-            processCmd(cl);
-            commandCount++;
+        if (line.equals("")) {
+            return;
         }
+        cl.parseCommand(line);
+        addToHistory(commandCount, line);
+
+        if (multiStartIndex > -1 && multiEndIndex == -1 && commandCount >= multiStartIndex) {
+            multiClList.add(cl);
+            processMultiZKCmdList(multiClList);
+        } else {
+            processCmd(cl);
+        }
+        commandCount++;
+
     }
 
     protected boolean processCmd(MyCommandOptions co) throws CliException, IOException, InterruptedException {
@@ -377,6 +400,7 @@ public class ZooKeeperMain {
     protected boolean processZKCmd(MyCommandOptions co) throws CliException, IOException, InterruptedException {
         String[] args = co.getArgArray();
         String cmd = co.getCommand();
+        System.out.println("fuck_processZKCmd:args:" + args + ",cmd=" + cmd);
         if (args.length < 1) {
             usage();
             throw new MalformedCommandException("No command entered");
@@ -424,6 +448,12 @@ public class ZooKeeperMain {
             } else {
                 connectToZK(host);
             }
+        } else if (cmd.equals("multi")) {
+            System.out.println("OK");
+        } else if (cmd.equals("commit")) {
+
+        } else if (cmd.equals("abort")) {
+            System.out.println("OK");
         }
 
         // Below commands all need a live connection
@@ -441,6 +471,69 @@ public class ZooKeeperMain {
             usage();
         }
         return watch;
+    }
+
+    protected boolean processMultiZKCmdList(List<MyCommandOptions> coList) throws CliException, IOException, InterruptedException {
+        MyCommandOptions co = coList.get(coList.size() - 1);
+        String[] args = co.getArgArray();
+        String cmd = co.getCommand();
+        if (args.length < 1) {
+            usage();
+            throw new MalformedCommandException("No command entered");
+        }
+
+//        if (!commandMap.containsKey(cmd)) {
+//            usage();
+//            throw new CommandNotFoundException("Command " + cmd + " not support for multi Command");
+//        }
+
+        LOG.debug("Processing {}", cmd);
+
+        Transaction transaction = zk.transaction();
+        if (cmd.equals("multi")) {
+            System.out.println("OK");
+        } else if (cmd.equals("commit")) {
+            //transaction.setData().check().delete().create()
+            try {
+                transaction.commit();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (KeeperException e) {
+                e.printStackTrace();
+            }
+            System.out.println("OK");
+        } else if (cmd.equals("abort")) {
+            multiClList.clear();
+            System.out.println("OK");
+        } else if (cmd.equals("set")) {
+            transaction.setData();
+            System.out.println("QUEUED");
+        } else if (cmd.equals("del")) {
+            transaction.delete();
+            System.out.println("QUEUED");
+        } else if (cmd.equals("create")) {
+            transaction.create();
+            System.out.println("QUEUED");
+        } else {
+            //usage();
+            throw new CommandNotFoundException("Command " + cmd + " not support for multi Command");
+        }
+
+//        // Below commands all need a live connection
+//        if (zk == null || !zk.getState().isAlive()) {
+//            System.out.println("Not connected");
+//            return false;
+//        }
+//
+//        // execute from commandMap
+//        CliCommand cliCmd = commandMapCli.get(cmd);
+//        if (cliCmd != null) {
+//            cliCmd.setZk(zk);
+//            watch = cliCmd.parse(args).exec();
+//        } else if (!commandMap.containsKey(cmd)) {
+//            usage();
+//        }
+        return false;
     }
 
 }
