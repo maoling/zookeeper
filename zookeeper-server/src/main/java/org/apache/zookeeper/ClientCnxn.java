@@ -782,6 +782,11 @@ public class ClientCnxn {
         eventThread.queueCallback(cb, rc, path, ctx);
     }
 
+    // for test only
+    protected void onConnecting(InetSocketAddress addr) {
+
+    }
+
     private void conLossPacket(Packet p) {
         if (p.replyHeader == null) {
             return;
@@ -876,7 +881,7 @@ public class ClientCnxn {
               case AUTHPACKET_XID:
                 LOG.debug("Got auth session id: 0x{}", Long.toHexString(sessionId));
                 if (replyHdr.getErr() == KeeperException.Code.AUTHFAILED.intValue()) {
-                    state = States.AUTH_FAILED;
+                    setZkState(States.AUTH_FAILED);
                     eventThread.queueEvent(new WatchedEvent(Watcher.Event.EventType.None,
                         Watcher.Event.KeeperState.AuthFailed, null));
                     eventThread.queueEventOfDeath();
@@ -957,7 +962,11 @@ public class ClientCnxn {
 
         SendThread(ClientCnxnSocket clientCnxnSocket) {
             super(makeThreadName("-SendThread()"));
-            state = States.CONNECTING;
+            try {
+                setZkState(States.CONNECTING);
+            } catch (IOException e) {
+                throw new RuntimeException("Connection setup failed when migrate state to CONNECTING");
+            }
             this.clientCnxnSocket = clientCnxnSocket;
             setDaemon(true);
         }
@@ -971,8 +980,18 @@ public class ClientCnxn {
          *
          * @return
          */
-        ZooKeeper.States getZkState() {
+        synchronized ZooKeeper.States getZkState() {
             return state;
+        }
+
+        synchronized void setZkState(ZooKeeper.States newState) throws IOException {
+            if (!state.isAlive()) {
+                if (newState == States.CONNECTING) {
+                    throw new IOException(
+                            "Connection has already been closed and reconnection is not allowed");
+                }
+            }
+            state = newState;
         }
 
         ClientCnxnSocket getClientCnxnSocket() {
@@ -1121,7 +1140,7 @@ public class ClientCnxn {
                     LOG.warn("Unexpected exception", e);
                 }
             }
-            state = States.CONNECTING;
+            setZkState(States.CONNECTING);
 
             String hostPort = addr.getHostString() + ":" + addr.getPort();
             MDC.put("myid", hostPort);
@@ -1179,6 +1198,7 @@ public class ClientCnxn {
                         } else {
                             serverAddress = hostProvider.next(1000);
                         }
+                        ClientCnxn.this.onConnecting(serverAddress);
                         startConnect(serverAddress);
                         clientCnxnSocket.updateLastSendAndHeard();
                     }
@@ -1192,7 +1212,7 @@ public class ClientCnxn {
                                     zooKeeperSaslClient.initialize(ClientCnxn.this);
                                 } catch (SaslException e) {
                                     LOG.error("SASL authentication with Zookeeper Quorum member failed.", e);
-                                    state = States.AUTH_FAILED;
+                                    setZkState(States.AUTH_FAILED);
                                     sendAuthEvent = true;
                                 }
                             }
@@ -1200,7 +1220,7 @@ public class ClientCnxn {
                             if (authState != null) {
                                 if (authState == KeeperState.AuthFailed) {
                                     // An authentication error occurred during authentication with the Zookeeper Server.
-                                    state = States.AUTH_FAILED;
+                                    setZkState(States.AUTH_FAILED);
                                     sendAuthEvent = true;
                                 } else {
                                     if (authState == KeeperState.SaslAuthenticated) {
@@ -1394,7 +1414,7 @@ public class ClientCnxn {
             boolean isRO) throws IOException {
             negotiatedSessionTimeout = _negotiatedSessionTimeout;
             if (negotiatedSessionTimeout <= 0) {
-                state = States.CLOSED;
+                setZkState(States.CLOSED);
 
                 eventThread.queueEvent(new WatchedEvent(Watcher.Event.EventType.None, Watcher.Event.KeeperState.Expired, null));
                 eventThread.queueEventOfDeath();
@@ -1415,7 +1435,7 @@ public class ClientCnxn {
             hostProvider.onConnected();
             sessionId = _sessionId;
             sessionPasswd = _sessionPasswd;
-            state = (isRO) ? States.CONNECTEDREADONLY : States.CONNECTED;
+            setZkState((isRO) ? States.CONNECTEDREADONLY : States.CONNECTED);
             seenRwServerBefore |= !isRO;
             LOG.info(
                 "Session establishment complete on server {}, session id = 0x{}, negotiated timeout = {}{}",
@@ -1428,7 +1448,10 @@ public class ClientCnxn {
         }
 
         void close() {
-            state = States.CLOSED;
+            try {
+                setZkState(States.CLOSED);
+            } catch (IOException e) {
+            }
             clientCnxnSocket.onClosing();
         }
 
