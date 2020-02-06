@@ -1167,6 +1167,9 @@ public class ClientCnxn {
             final int MAX_SEND_PING_INTERVAL = 10000; //10 seconds
             InetSocketAddress serverAddress = null;
             while (state.isAlive()) {
+                System.out.println("fuck_enter_while state.isAlive():" + state.isAlive()
+                +",clientCnxnSocket.isConnected()="+clientCnxnSocket.isConnected()
+                +", state.isConnected():"+state.isConnected());
                 try {
                     if (!clientCnxnSocket.isConnected()) {
                         // don't re-establish connection if we are closing
@@ -1179,6 +1182,7 @@ public class ClientCnxn {
                         } else {
                             serverAddress = hostProvider.next(1000);
                         }
+                        System.out.println("fuck_startConnect");
                         startConnect(serverAddress);
                         clientCnxnSocket.updateLastSendAndHeard();
                     }
@@ -1230,6 +1234,7 @@ public class ClientCnxn {
                         throw new SessionTimeoutException(warnInfo);
                     }
                     if (state.isConnected()) {
+                        System.out.println("fuck_startConnect_2");
                         //1000(1 second) is to prevent race condition missing to send the second ping
                         //also make sure not to send too many pings when readTimeout is small
                         int timeToNextPing = readTimeout / 2
@@ -1258,9 +1263,10 @@ public class ClientCnxn {
                         }
                         to = Math.min(to, pingRwTimeout - idlePingRwServer);
                     }
-
+                    System.out.println("fuck_before_start_doTransport!!!");
                     clientCnxnSocket.doTransport(to, pendingQueue, ClientCnxn.this);
                 } catch (Throwable e) {
+                    System.out.println("fuck_Throwable_closing:" + closing);
                     if (closing) {
                         // closing so this is expected
                         LOG.warn(
@@ -1282,17 +1288,20 @@ public class ClientCnxn {
                     }
                 }
             }
-
+            System.out.println("fuck_jump_out_while_state:"+state);
             synchronized (state) {
                 // When it comes to this point, it guarantees that later queued
                 // packet to outgoingQueue will be notified of death.
                 cleanup();
             }
+            System.out.println("fuck_clientCnxnSocket.close()");
             clientCnxnSocket.close();
             if (state.isAlive()) {
                 eventThread.queueEvent(new WatchedEvent(Event.EventType.None, Event.KeeperState.Disconnected, null));
             }
+            System.out.println("fuck_eventThread.queueEvent");
             eventThread.queueEvent(new WatchedEvent(Event.EventType.None, Event.KeeperState.Closed, null));
+            System.out.println("fuck SendThread exited loop!!!!");
             ZooTrace.logTraceMessage(
                 LOG,
                 ZooTrace.getTextTraceLevel(),

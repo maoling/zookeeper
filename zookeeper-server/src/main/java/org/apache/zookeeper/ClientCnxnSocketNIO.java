@@ -184,6 +184,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
 
     @Override
     void cleanup() {
+        System.out.println("fuck_cleanup_sockKey:"+sockKey);
         if (sockKey != null) {
             SocketChannel sock = (SocketChannel) sockKey.channel();
             sockKey.cancel();
@@ -207,6 +208,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
             } catch (IOException e) {
                 LOG.debug("Ignoring exception during channel close", e);
             }
+            System.out.println("fuck_finish_close_socket");
         }
         try {
             Thread.sleep(100);
