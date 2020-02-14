@@ -81,6 +81,7 @@ public class FollowerRequestProcessor extends ZooKeeperCriticalThread implements
                 // add it to pendingSyncs.
                 switch (request.type) {
                 case OpCode.sync:
+                    LOG.info("fuck I am FollowerRequestProcessor---zks.pendingSyncs.add(request)");
                     zks.pendingSyncs.add(request);
                     zks.getFollower().request(request);
                     break;

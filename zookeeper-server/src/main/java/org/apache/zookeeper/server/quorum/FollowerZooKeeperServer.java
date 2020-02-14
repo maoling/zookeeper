@@ -117,6 +117,7 @@ public class FollowerZooKeeperServer extends LearnerZooKeeperServer {
         }
 
         Request r = pendingSyncs.remove();
+        LOG.info("fuck remove SYNC from pendingSyncs to be committed that Request is:" + r);
         if (r instanceof LearnerSyncRequest) {
             LearnerSyncRequest lsr = (LearnerSyncRequest) r;
             lsr.fh.queuePacket(new QuorumPacket(Leader.SYNC, 0, null, null));

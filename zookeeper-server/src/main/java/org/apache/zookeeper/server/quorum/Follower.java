@@ -239,6 +239,7 @@ public class Follower extends Learner {
             }
             break;
         case Leader.SYNC:
+            LOG.info("fuck I am follower.java I receive Leader's SYNC  fzk.sync();");
             fzk.sync();
             break;
         default:

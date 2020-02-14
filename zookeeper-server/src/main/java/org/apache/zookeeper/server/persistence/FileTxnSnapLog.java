@@ -338,6 +338,8 @@ public class FileTxnSnapLog {
                     highestZxid = hdr.getZxid();
                 }
                 try {
+                    LOG.info("fuck FileTxnSnapLog.fastForwardFromEdits while loop before processTransaction"
+                            + " read log from disk and apply to the SM");
                     processTransaction(hdr, dt, sessions, itr.getTxn());
                     dt.compareDigest(hdr, itr.getTxn(), itr.getDigest());
                     txnLoaded++;
@@ -430,6 +432,7 @@ public class FileTxnSnapLog {
             rc = dt.processTxn(hdr, txn);
             break;
         default:
+            LOG.info("fuck FileTxnSnapLog.processTransaction hdr.getType():" + hdr.getType());
             rc = dt.processTxn(hdr, txn);
         }
 

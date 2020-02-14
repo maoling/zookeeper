@@ -922,7 +922,7 @@ public class Leader extends LearnerMaster {
 
         if (p.request != null) {
             toBeApplied.add(p);
-            System.out.println("fuck lead()toBeApplied.add(p):" + toBeApplied.toString());
+            LOG.info("fuck lead()toBeApplied.add(p):" + toBeApplied.toString());
         }
 
         if (p.request == null) {
@@ -956,9 +956,11 @@ public class Leader extends LearnerMaster {
             commit(zxid);
             inform(p);
         }
+        LOG.info("fuck Leader has commit a log---zk.commitProcessor.commit(p.request): " + p.request.toString());
         zk.commitProcessor.commit(p.request);
         if (pendingSyncs.containsKey(zxid)) {
             for (LearnerSyncRequest r : pendingSyncs.remove(zxid)) {
+                LOG.info("fuck Leader.tryToCommit sendSync(r) to a follower r:"+r.toString());
                 sendSync(r);
             }
         }
@@ -1089,6 +1091,7 @@ public class Leader extends LearnerMaster {
                 Iterator<Proposal> iter = leader.toBeApplied.iterator();
                 if (iter.hasNext()) {
                     Proposal p = iter.next();
+                    LOG.info("fuck Leader.ToBeAppliedRequestProcessor.processRequest Proposal:" + p.toString());
                     if (p.request != null && p.request.zxid == zxid) {
                         iter.remove();
                         return;
@@ -1265,6 +1268,8 @@ public class Leader extends LearnerMaster {
      */
 
     public synchronized void processSync(LearnerSyncRequest r) {
+        LOG.info("fuck Leader.processSync " + r.toString()
+        + ",outstandingProposals.size():" + outstandingProposals.size());
         if (outstandingProposals.isEmpty()) {
             sendSync(r);
         } else {

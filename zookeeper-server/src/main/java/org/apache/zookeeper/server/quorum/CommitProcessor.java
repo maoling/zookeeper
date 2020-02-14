@@ -578,7 +578,7 @@ public class CommitProcessor extends ZooKeeperCriticalThread implements RequestP
         if (stopped || request == null) {
             return;
         }
-        LOG.debug("Committing request:: {}", request);
+        System.out.println("fuck Committing request:: add to committedRequests quenue {}" + request);
         request.commitRecvTime = Time.currentElapsedTime();
         ServerMetrics.getMetrics().COMMITS_QUEUED.add(1);
         committedRequests.add(request);
