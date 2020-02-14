@@ -458,6 +458,7 @@ public class CommitProcessor extends ZooKeeperCriticalThread implements RequestP
     private void processWrite(Request request) throws RequestProcessorException {
         processCommitMetrics(request, true);
 
+        System.out.println("fuck_CommitProcessor.processWrite request:" +request);
         long timeBeforeFinalProc = Time.currentElapsedTime();
         nextProcessor.processRequest(request);
         ServerMetrics.getMetrics().WRITE_FINAL_PROC_TIME.add(Time.currentElapsedTime() - timeBeforeFinalProc);
