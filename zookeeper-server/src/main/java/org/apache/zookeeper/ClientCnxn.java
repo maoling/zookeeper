@@ -980,18 +980,19 @@ public class ClientCnxn {
          *
          * @return
          */
-        synchronized ZooKeeper.States getZkState() {
+        ZooKeeper.States getZkState() {
             return state;
         }
 
         synchronized void setZkState(ZooKeeper.States newState) throws IOException {
-            if (!state.isAlive()) {
-                if (newState == States.CONNECTING) {
+            if (!state.isAlive() && newState == States.CONNECTING) {
                     throw new IOException(
                             "Connection has already been closed and reconnection is not allowed");
-                }
             }
+            System.out.println("fuck-startConnect-setZkState: thread-info:"+ Thread.currentThread().getName()+ ", state" + state
+            +", newState:" + newState);
             state = newState;
+
         }
 
         ClientCnxnSocket getClientCnxnSocket() {
@@ -1198,7 +1199,7 @@ public class ClientCnxn {
                         } else {
                             serverAddress = hostProvider.next(1000);
                         }
-                        ClientCnxn.this.onConnecting(serverAddress);
+                        onConnecting(serverAddress);
                         startConnect(serverAddress);
                         clientCnxnSocket.updateLastSendAndHeard();
                     }
