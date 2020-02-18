@@ -73,7 +73,7 @@ public class WatchManagerTest extends ZKTestCase {
 
     public IWatchManager getWatchManager() throws IOException {
         System.setProperty(WatchManagerFactory.ZOOKEEPER_WATCH_MANAGER_NAME, className);
-        return WatchManagerFactory.createWatchManager(className);
+        return WatchManagerFactory.createWatchManager();
     }
 
     public DumbWatcher createOrGetWatcher(int watcherId) {
