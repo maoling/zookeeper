@@ -180,6 +180,10 @@ public class QuorumPeerConfigTest {
         quorumPeerConfig.parseProperties(zkProp);
         assertEquals(false, quorumPeerConfig.areLocalSessionsEnabled());
 
+        zkProp.setProperty("localSessionsEnabled", "FalsE");
+        quorumPeerConfig.parseProperties(zkProp);
+        assertEquals(false, quorumPeerConfig.areLocalSessionsEnabled());
+
         zkProp.setProperty("localSessionsEnabled", "yes");
         try {
             quorumPeerConfig.parseProperties(zkProp);
