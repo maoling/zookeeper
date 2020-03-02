@@ -1287,6 +1287,8 @@ public class ClientCnxn {
             synchronized (outgoingQueue) {
                 // When it comes to this point, it guarantees that later queued
                 // packet to outgoingQueue will be notified of death.
+                System.out.println("fuck_queuePacket_cleanup:" + outgoingQueue.hashCode()
+                + ",state=" + state.hashCode()+ ",objectLock:" + objectLock.hashCode());
                 cleanup();
             }
             clientCnxnSocket.close();
@@ -1512,6 +1514,8 @@ public class ClientCnxn {
     // @VisibleForTesting
     volatile States state = States.NOT_CONNECTED;
 
+    volatile Object objectLock = new Object();
+
     /*
      * getXid() is called externally by ClientCnxnNIO::doIO() when packets are sent from the outgoingQueue to
      * the server. Thus, getXid() must be public.
@@ -1645,6 +1649,8 @@ public class ClientCnxn {
         // 2. synchronized against each packet. So if a closeSession packet is added,
         // later packet will be notified.
         synchronized (outgoingQueue) {
+            System.out.println("fuck_queuePacket_outgoingQueue:" + outgoingQueue.hashCode()
+            +",state="+state.hashCode() + ",objectLock:" + objectLock.hashCode());
             if (!state.isAlive() || closing) {
                 conLossPacket(packet);
             } else {

@@ -444,7 +444,7 @@ Set the Acl permission for one node.
 [zkshell: 28] addauth digest user1:12345
 [zkshell: 30] setAcl /acl_auth_test auth:user1:12345:crwad
 [zkshell: 31] getAcl /acl_auth_test
-	'digest,'user1:+owfoSBn/am19roBPzR1/MfCblE=
+	'digest,'user1:+owfoSBvn/am19roBPzR1/MfCblE=
 	: cdrwa
 
 # -R to set Acl recursely
