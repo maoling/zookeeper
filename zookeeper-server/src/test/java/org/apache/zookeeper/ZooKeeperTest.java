@@ -647,6 +647,31 @@ public class ZooKeeperTest extends ClientBase {
     }
 
     @Test
+    public void testFuck() throws Exception {
+        final ZooKeeper zk = new ZooKeeper(hostPort,30000, null);
+        final byte[] EMPTY = new byte[0];
+
+        zk.setData("/", EMPTY, -1);
+        zk.create("/a", EMPTY, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+        zk.create("/a/b", EMPTY, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+        zk.create("/a/b/c", EMPTY, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+        zk.create("/a/d", EMPTY, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+        zk.create("/e", EMPTY, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+
+        ZooKeeperMain zkMain = new ZooKeeperMain(zk);
+        String setAclCommand = "setAcl -R /a world:anyone:r";
+        zkMain.cl.parseCommand(setAclCommand);
+        assertFalse(zkMain.processZKCmd(zkMain.cl));
+
+        assertEquals(Ids.READ_ACL_UNSAFE, zk.getACL("/a", new Stat()));
+        assertEquals(Ids.READ_ACL_UNSAFE, zk.getACL("/a/b", new Stat()));
+        assertEquals(Ids.READ_ACL_UNSAFE, zk.getACL("/a/b/c", new Stat()));
+        assertEquals(Ids.READ_ACL_UNSAFE, zk.getACL("/a/d", new Stat()));
+        // /e is unset, its acl should remain the same.
+        assertEquals(Ids.OPEN_ACL_UNSAFE, zk.getACL("/e", new Stat()));
+    }
+
+    @Test
     public void testClientReconnectWithZKClientConfig() throws Exception {
         ZooKeeper zk = null;
         ZooKeeper newZKClient = null;

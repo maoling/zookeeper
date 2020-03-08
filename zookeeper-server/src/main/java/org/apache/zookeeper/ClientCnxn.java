@@ -499,6 +499,8 @@ public class ClientCnxn {
         }
 
         private void queueEvent(WatchedEvent event, Set<Watcher> materializedWatchers) {
+            System.out.println("fuck_event:"+event+",materializedWatchers:"+materializedWatchers
+            +"，sessionState："+sessionState+"，event.getState()："+event.getState());
             if (event.getType() == EventType.None && sessionState == event.getState()) {
                 return;
             }
@@ -511,6 +513,7 @@ public class ClientCnxn {
                 watchers = new HashSet<Watcher>();
                 watchers.addAll(materializedWatchers);
             }
+            System.out.println("fuck_after_materialize_return_watchers:"+watchers+",event:"+event);
             WatcherSetEventPair pair = new WatcherSetEventPair(watchers, event);
             // queue the pair (watch set & event) for later processing
             waitingEvents.add(pair);
@@ -549,6 +552,7 @@ public class ClientCnxn {
                     if (event == eventOfDeath) {
                         wasKilled = true;
                     } else {
+                        System.out.println("fuck_EventThread event:"+event.toString());
                         processEvent(event);
                     }
                     if (wasKilled) {
@@ -573,9 +577,12 @@ public class ClientCnxn {
                     // each watcher will process the event
                     WatcherSetEventPair pair = (WatcherSetEventPair) event;
                     for (Watcher watcher : pair.watchers) {
+                        System.out.println("fuck_EventThread processEvent WatcherSetEventPair:"+watcher
+                                + watcher);
                         try {
                             watcher.process(pair.event);
                         } catch (Throwable t) {
+                            System.out.println("fuck_Error while calling watcher." + t);
                             LOG.error("Error while calling watcher.", t);
                         }
                     }
@@ -732,6 +739,7 @@ public class ClientCnxn {
 
     // @VisibleForTesting
     protected void finishPacket(Packet p) {
+        System.out.println("fuck_finishPacket Packet:"+p);
         int err = p.replyHeader.getErr();
         if (p.watchRegistration != null) {
             p.watchRegistration.register(err);
@@ -745,6 +753,7 @@ public class ClientCnxn {
                 for (Entry<EventType, Set<Watcher>> entry : materializedWatchers.entrySet()) {
                     Set<Watcher> watchers = entry.getValue();
                     if (watchers.size() > 0) {
+                        System.out.println("fuck_watchers.size() > 0:");
                         queueEvent(p.watchDeregistration.getClientPath(), err, watchers, entry.getKey());
                         // ignore connectionloss when removing from local
                         // session
@@ -909,6 +918,7 @@ public class ClientCnxn {
 
                 WatchedEvent we = new WatchedEvent(event);
                 LOG.debug("Got {} for session id 0x{}", we, Long.toHexString(sessionId));
+                System.out.println("fuck_eventThread.queueEvent(we):"+we);
                 eventThread.queueEvent(we);
                 return;
             default:
@@ -1412,6 +1422,7 @@ public class ClientCnxn {
             if (negotiatedSessionTimeout <= 0) {
                 changeZkState(States.CLOSED);
 
+                System.out.println("fuck_onConnected negotiatedSessionTimeout <= 0:");
                 eventThread.queueEvent(new WatchedEvent(Watcher.Event.EventType.None, Watcher.Event.KeeperState.Expired, null));
                 eventThread.queueEventOfDeath();
 
@@ -1440,6 +1451,7 @@ public class ClientCnxn {
                 negotiatedSessionTimeout,
                 (isRO ? " (READ-ONLY mode)" : ""));
             KeeperState eventState = (isRO) ? KeeperState.ConnectedReadOnly : KeeperState.SyncConnected;
+            System.out.println("fuck_eventThread.queueEvent_seenRwServerBefore |= !isRO;");
             eventThread.queueEvent(new WatchedEvent(Watcher.Event.EventType.None, eventState, null));
         }
 

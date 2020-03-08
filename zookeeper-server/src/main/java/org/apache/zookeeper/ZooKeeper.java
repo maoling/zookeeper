@@ -528,7 +528,7 @@ public class ZooKeeper implements AutoCloseable {
             String clientPath
         ) {
             final Set<Watcher> result = new HashSet<>();
-
+            System.out.println("fuck_materialize_defaultWatcher:"+defaultWatcher);
             switch (type) {
             case None:
                 if (defaultWatcher != null) {
