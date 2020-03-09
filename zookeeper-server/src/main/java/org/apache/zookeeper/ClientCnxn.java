@@ -1168,7 +1168,11 @@ public class ClientCnxn {
             final int MAX_SEND_PING_INTERVAL = 10000; //10 seconds
             InetSocketAddress serverAddress = null;
             while (state.isAlive()) {
-                try {
+                System.out.println("fuck_while state:" + state + ",state.hashCode:"+ state.hashCode()
+                        +",state.name():"+ state.name()+",state.name().hashCode():"+state.name().hashCode()+",identityHashCode(state.name()):"+ System.identityHashCode(state.name())
+                        +",object:"+ System.identityHashCode(object)
+                );
+            try {
                     if (!clientCnxnSocket.isConnected()) {
                         // don't re-establish connection if we are closing
                         if (closing) {
@@ -1284,11 +1288,16 @@ public class ClientCnxn {
                 }
             }
 
+            System.out.println("fuck_jump_out_while state:" + state + ",state.hashCode:"+ state.hashCode()
+                    +",state.name():"+ state.name()+",state.name().hashCode():"+state.name().hashCode()+",identityHashCode(state.name()):"+ System.identityHashCode(state.name())
+            );
+
             synchronized (outgoingQueue) {
                 // When it comes to this point, it guarantees that later queued
                 // packet to outgoingQueue will be notified of death.
-                System.out.println("fuck_queuePacket_cleanup:" + outgoingQueue.hashCode()
-                + ",state=" + state.hashCode()+ ",objectLock:" + objectLock.hashCode());
+//                System.out.println("fuck_queuePacket_cleanup:" + outgoingQueue.hashCode()
+//                + ",state=" + state.hashCode()+",state value:"+state+ ",objectLock:" + objectLock.hashCode());
+//
                 cleanup();
             }
             clientCnxnSocket.close();
@@ -1512,7 +1521,13 @@ public class ClientCnxn {
     protected int xid = 1;
 
     // @VisibleForTesting
-    volatile States state = States.NOT_CONNECTED;
+    public volatile States state = States.NOT_CONNECTED;
+
+    public static final Object object = new Object();
+
+    public Object getObject() {
+        return object;
+    }
 
     volatile Object objectLock = new Object();
 
@@ -1649,8 +1664,9 @@ public class ClientCnxn {
         // 2. synchronized against each packet. So if a closeSession packet is added,
         // later packet will be notified.
         synchronized (outgoingQueue) {
-            System.out.println("fuck_queuePacket_outgoingQueue:" + outgoingQueue.hashCode()
-            +",state="+state.hashCode() + ",objectLock:" + objectLock.hashCode());
+//            System.out.println("fuck_queuePacket_outgoingQueue:" + outgoingQueue.hashCode()
+//            +",state="+state.hashCode() + ",state value:"+state + ",objectLock:" + objectLock.hashCode());
+//
             if (!state.isAlive() || closing) {
                 conLossPacket(packet);
             } else {

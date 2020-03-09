@@ -3312,6 +3312,10 @@ public class ZooKeeper implements AutoCloseable {
         return cnxn.getState();
     }
 
+    public Object getZKObject() {
+        return cnxn.getObject();
+    }
+
     /**
      * String representation of this ZooKeeper client. Suitable for things
      * like logging.
