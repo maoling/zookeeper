@@ -166,6 +166,19 @@ public class RateLoggerTest {
                         "[2 times] Message: test message one. Last value: value-five"));
     }
 
+
+    @Test
+    public void recurringMessageTimedImplicitFlush2() {
+        RateLogger rateLogger = getRateLogger();
+        rateLogger.rateLimitLog("test message one.", "value-one");
+        rateLogger.rateLimitLog("test message one.", "value-two");
+        rateLogger.rateLimitLog("test message one.", "value-three");
+
+        currentTime.set(DEFAULT_LOGGING_INTERVAL + 1L);
+        rateLogger.rateLimitLog("test message one.", "value-four");
+        rateLogger.flush();
+    }
+
     /**
      * Creates a {@code RateLogger} instance that allows the current time to
      * be set for testing.
