@@ -162,6 +162,8 @@ public class BinaryInputArchive implements InputArchive {
     // make up for extra fields, etc. (otherwise e.g. clients may be able to
     // write buffers larger than we can read from disk!)
     private void checkLength(int len) throws IOException {
+        System.out.println("fuck_checkLength len:"+len +",maxBufferSize + extraMaxBufferSize:"+
+        maxBufferSize + extraMaxBufferSize);
         if (len < 0 || len > maxBufferSize + extraMaxBufferSize) {
             throw new IOException(UNREASONBLE_LENGTH + len);
         }
