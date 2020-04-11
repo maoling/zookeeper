@@ -1142,6 +1142,15 @@ property, when available, is noted below.
     The intent is for the clients not to retry them immediately.
     When set to 0, no requests will be throttled. The default is 0.
 
+* *digestAlg* :
+     **New in 3.7.0:**
+    (Java system property: **zookeeper.DigestAuthenticationProvider.digestAlg**)
+    set ACL digest algorithm. The optional value is: `SHA1`, `SHA-256`, `SHA3-256`. The default one is: `SHA1` which will
+    be deprecated in the future for security issue.
+    ###### Note
+    >Set this property the same value in all the server.
+     Regenerate `superDigest` when migrating to new algorithm. SetAcl for znode which already had a digest auth of old algorithm.
+
 <a name="sc_clusterOptions"></a>
 
 #### Cluster Options

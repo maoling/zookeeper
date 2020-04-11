@@ -18,8 +18,9 @@
 
 package org.apache.zookeeper.server.auth;
 
-import java.security.MessageDigest;
+import static org.apache.zookeeper.server.auth.DigestStrategyFactory.DigestAlgEnum.SHA_1;
 import java.security.NoSuchAlgorithmException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.server.ServerCnxn;
@@ -29,6 +30,24 @@ import org.slf4j.LoggerFactory;
 public class DigestAuthenticationProvider implements AuthenticationProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(DigestAuthenticationProvider.class);
+
+    private static String digestAlgorithm;
+
+    public void setDigestAlgorithm(String digestAlgorithm) {
+        setDigestAlgorithmValue(digestAlgorithm);
+    }
+
+    public static void setDigestAlgorithmValue(String digestAlgorithm) {
+        DigestAuthenticationProvider.digestAlgorithm = digestAlgorithm;
+    }
+
+    public DigestAuthenticationProvider(String digestAlgorithm) {
+        if (StringUtils.isBlank(digestAlgorithm)) {
+            setDigestAlgorithm(SHA_1.getName());
+        } else {
+            setDigestAlgorithm(digestAlgorithm);
+        }
+    }
 
     /** specify a command line property with key of
      * "zookeeper.DigestAuthenticationProvider.superDigest"
@@ -88,8 +107,8 @@ public class DigestAuthenticationProvider implements AuthenticationProvider {
 
     public static String generateDigest(String idPassword) throws NoSuchAlgorithmException {
         String[] parts = idPassword.split(":", 2);
-        byte[] digest = MessageDigest.getInstance("SHA1").digest(idPassword.getBytes());
-        return parts[0] + ":" + base64Encode(digest);
+        byte[] digestPassword = DigestStrategyFactory.getInstance(digestAlgorithm).generateDigest(idPassword);
+        return parts[0] + ":" + base64Encode(digestPassword);
     }
 
     public KeeperException.Code handleAuthentication(ServerCnxn cnxn, byte[] authData) {
@@ -135,8 +154,9 @@ public class DigestAuthenticationProvider implements AuthenticationProvider {
      * @throws NoSuchAlgorithmException
      */
     public static void main(String[] args) throws NoSuchAlgorithmException {
-        for (int i = 0; i < args.length; i++) {
-            System.out.println(args[i] + "->" + generateDigest(args[i]));
+        DigestAuthenticationProvider provider = new DigestAuthenticationProvider(args[0]);
+        for (int i = 1; i < args.length; i++) {
+            System.out.println(args[i] + "->" + provider.generateDigest(args[i]));
         }
     }
 

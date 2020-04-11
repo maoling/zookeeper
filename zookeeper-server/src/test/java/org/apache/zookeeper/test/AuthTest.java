@@ -20,6 +20,8 @@ package org.apache.zookeeper.test;
 
 import static org.junit.Assert.fail;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.apache.zookeeper.CreateMode;
@@ -27,15 +29,29 @@ import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.TestableZooKeeper;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
+import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.data.Id;
+import org.apache.zookeeper.server.auth.DigestStrategyFactory;
 import org.junit.Test;
 
 public class AuthTest extends ClientBase {
 
     static {
         // password is test
-        System.setProperty("zookeeper.DigestAuthenticationProvider.superDigest", "super:D/InIHSb7yEEbrWz8b9l71RjZJU=");
+        if (System.currentTimeMillis() % 3 == 0) {
+            System.setProperty("zookeeper.DigestAuthenticationProvider.digestAlg", DigestStrategyFactory.DigestAlgEnum.SHA_1.getName());
+            System.setProperty("zookeeper.DigestAuthenticationProvider.superDigest", "super:D/InIHSb7yEEbrWz8b9l71RjZJU=");
+        } else if (System.currentTimeMillis() % 3 == 1) {
+            System.setProperty("zookeeper.DigestAuthenticationProvider.digestAlg", DigestStrategyFactory.DigestAlgEnum.SHA_256.getName());
+            System.setProperty("zookeeper.DigestAuthenticationProvider.superDigest", "super:wjySwxg860UATFtciuZ1lpzrCHrPeov6SPu/ZD56uig=");
+        } else {
+            System.setProperty("zookeeper.DigestAuthenticationProvider.digestAlg", DigestStrategyFactory.DigestAlgEnum.SHA3_256.getName());
+            System.setProperty("zookeeper.DigestAuthenticationProvider.superDigest", "super:cRy/KPYuDpW/dtsepniTMpuiuupnWgdU9txltIfv3hA=");
+        }
+
         System.setProperty("zookeeper.authProvider.1", "org.apache.zookeeper.test.InvalidAuthProvider");
     }
 
@@ -155,6 +171,40 @@ public class AuthTest extends ClientBase {
 
             zk.setACL("/path1", Ids.OPEN_ACL_UNSAFE, -1);
 
+        } finally {
+            zk.close();
+        }
+    }
+
+    @Test
+    public void testOrdinaryACL() throws Exception {
+        ZooKeeper zk = createClient();
+        try {
+            String path = "/path1";
+            zk.create(path, null, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            zk.addAuthInfo("digest", "username1:password1".getBytes());
+            List<ACL> list = new ArrayList<>();
+            int perm = ZooDefs.Perms.ALL;
+            String userPassword = "username1:password1";
+            Id id = new Id("auth", userPassword);
+            list.add(new ACL(perm, id));
+            zk.setACL(path, list, -1);
+            zk.close();
+
+            zk = createClient();
+            zk.addAuthInfo("digest", "super:test".getBytes());
+            zk.getData(path, false, null);
+            zk.close();
+
+            zk = createClient();
+            try {
+                zk.getData(path, false, null);
+                fail("should have NoAuthException");
+            } catch (KeeperException.NoAuthException e) {
+                // expected
+            }
+            zk.addAuthInfo("digest", "username1:password1".getBytes());
+            zk.getData(path, false, null);
         } finally {
             zk.close();
         }

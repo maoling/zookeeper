@@ -21,7 +21,9 @@ package org.apache.zookeeper.server.auth;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang.StringUtils;
 import org.apache.zookeeper.server.ZooKeeperServer;
+import org.apache.zookeeper.server.auth.DigestStrategyFactory.DigestAlgEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +33,24 @@ public class ProviderRegistry {
 
     private static boolean initialized = false;
     private static Map<String, AuthenticationProvider> authenticationProviders = new HashMap<>();
+
+    private static final String digestAlgProp = System.getProperty("zookeeper.DigestAuthenticationProvider.digestAlg");
+
+    static {
+        if (!StringUtils.isBlank(digestAlgProp)) {
+            boolean validDigest = false;
+            for (DigestAlgEnum digest : DigestAlgEnum.values()) {
+                if (digestAlgProp.equals(digest.getName())) {
+                    validDigest = true;
+                    break;
+                }
+            }
+            if (!validDigest) {
+                throw new IllegalArgumentException("don't support this digest algorithm:" + digestAlgProp + ", supported digest algorithms are: " + DigestStrategyFactory.DigestAlgEnum.getValues());
+            }
+        }
+        LOG.info("ACL digest algorithm is: {}", StringUtils.isBlank(digestAlgProp) ? DigestAlgEnum.SHA_1.getName() : digestAlgProp);
+    }
 
     //VisibleForTesting
     public static void reset() {
@@ -43,7 +63,7 @@ public class ProviderRegistry {
     public static void initialize() {
         synchronized (ProviderRegistry.class) {
             IPAuthenticationProvider ipp = new IPAuthenticationProvider();
-            DigestAuthenticationProvider digp = new DigestAuthenticationProvider();
+            DigestAuthenticationProvider digp = new DigestAuthenticationProvider(digestAlgProp);
             authenticationProviders.put(ipp.getScheme(), ipp);
             authenticationProviders.put(digp.getScheme(), digp);
             Enumeration<Object> en = System.getProperties().keys();
