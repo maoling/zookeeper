@@ -146,6 +146,35 @@ public class Leader extends LearnerMaster {
         }
     }
 
+    /**
+     * Tracks Server ID values of all connected learners
+     */
+    public final Set<Long> learnerServerIds = Collections.newSetFromMap(new
+            ConcurrentHashMap<Long,Boolean>());
+
+    /**
+     * Mark a Server ID as being used by a connected learner
+     * @param sid, the Server ID to claim
+     * @return true if the Server ID was successfully claimed, false if already in use
+     */
+    public boolean claimLearnerServerId(long sid) {
+        synchronized (learners) {
+            System.out.println("fuck_claimLearnerServerId_learners:" + learners);
+            return !learners.stream().map(learner -> learner.getSid())
+                                    .anyMatch(learnerSid -> learnerSid == sid);
+            //return new ArrayList<LearnerHandler>(learners);
+        }
+    }
+
+    /**
+     * Release the Server ID from a learner which has disconnected
+     * @param sid, the Server ID to release
+     * @return true if the Server ID was successfully released, false if not in list
+     */
+    public boolean releaseLearnerSid(long sid) {
+        return learnerServerIds.remove(sid);
+    }
+
     // list of followers that are ready to follow (i.e synced with the leader)
     private final HashSet<LearnerHandler> forwardingFollowers = new HashSet<LearnerHandler>();
 

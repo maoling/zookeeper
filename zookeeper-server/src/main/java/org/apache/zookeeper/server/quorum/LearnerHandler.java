@@ -455,7 +455,16 @@ public class LearnerHandler extends ZooKeeperThread {
     @Override
     public void run() {
         try {
+            System.out.println("fuck_learnerMaster instanceof Leader:" + learnerMaster);
+            if (learnerMaster instanceof Leader) {
+                Leader leader = (Leader)learnerMaster;
+                if(!leader.claimLearnerServerId(this.getSid())) {
+                    LOG.error("Learner is claiming serverId {} which is already in use", this.getSid());
+                    throw new IOException("Learner is trying to claim an in-use serverId: " + this.getSid());
+                }
+            }
             learnerMaster.addLearnerHandler(this);
+
             tickOfNextAckDeadline = learnerMaster.getTickOfInitialAckDeadline();
 
             ia = BinaryInputArchive.getArchive(bufferedInput);
