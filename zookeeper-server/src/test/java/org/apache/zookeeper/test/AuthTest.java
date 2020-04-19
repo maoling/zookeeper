@@ -34,28 +34,26 @@ import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Id;
-import org.apache.zookeeper.server.auth.DigestStrategyFactory;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class AuthTest extends ClientBase {
 
-    static {
+    @Before
+    public void setup() {
         // password is test
-        if (System.currentTimeMillis() % 3 == 0) {
-            System.setProperty("zookeeper.DigestAuthenticationProvider.digestAlg", DigestStrategyFactory.DigestAlgEnum.SHA_1.getName());
-            System.setProperty("zookeeper.DigestAuthenticationProvider.superDigest", "super:D/InIHSb7yEEbrWz8b9l71RjZJU=");
-        } else if (System.currentTimeMillis() % 3 == 1) {
-            System.setProperty("zookeeper.DigestAuthenticationProvider.digestAlg", DigestStrategyFactory.DigestAlgEnum.SHA_256.getName());
-            System.setProperty("zookeeper.DigestAuthenticationProvider.superDigest", "super:wjySwxg860UATFtciuZ1lpzrCHrPeov6SPu/ZD56uig=");
-        } else {
-            System.setProperty("zookeeper.DigestAuthenticationProvider.digestAlg", DigestStrategyFactory.DigestAlgEnum.SHA3_256.getName());
-            System.setProperty("zookeeper.DigestAuthenticationProvider.superDigest", "super:cRy/KPYuDpW/dtsepniTMpuiuupnWgdU9txltIfv3hA=");
-        }
-
+        System.setProperty("zookeeper.DigestAuthenticationProvider.superDigest", "super:D/InIHSb7yEEbrWz8b9l71RjZJU=");
         System.setProperty("zookeeper.authProvider.1", "org.apache.zookeeper.test.InvalidAuthProvider");
     }
 
-    private final CountDownLatch authFailed = new CountDownLatch(1);
+    @After
+    public void teardown() {
+        System.clearProperty("zookeeper.DigestAuthenticationProvider.superDigest");
+        System.clearProperty("zookeeper.DigestAuthenticationProvider.digestAlg");
+    }
+
+    protected final CountDownLatch authFailed = new CountDownLatch(1);
 
     @Override
     protected TestableZooKeeper createClient(String hp) throws IOException, InterruptedException {

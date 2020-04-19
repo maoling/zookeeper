@@ -31,7 +31,7 @@ import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA3Digest;
 
 public class DigestStrategyFactory {
-    private static Map<String, DigestStrategy> digestStrategyMap = new HashMap<>();
+    private static final Map<String, DigestStrategy> digestStrategyMap = new HashMap<>();
 
     private DigestStrategyFactory() {
     }
