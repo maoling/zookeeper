@@ -57,6 +57,8 @@ public class ReferenceCountedACLCache {
      * @return a long that map to the acls
      */
     public synchronized Long convertAcls(List<ACL> acls) {
+        System.out.println("fuck_convertAcls longKeyMap: "+longKeyMap
+        +",aclKeyMap: "+ aclKeyMap +",referenceCounter: "+ referenceCounter +",aclIndex:" +  aclIndex);
         if (acls == null) {
             return OPEN_UNSAFE_ACL_ID;
         }
@@ -81,6 +83,9 @@ public class ReferenceCountedACLCache {
      * @return a list of ACLs that map to the long
      */
     public synchronized List<ACL> convertLong(Long longVal) {
+        System.out.println("fuck_convertLong longKeyMap: "+longKeyMap
+                +",aclKeyMap: "+ aclKeyMap +",referenceCounter: "+ referenceCounter
+                +",aclIndex:" +  aclIndex);
         if (longVal == null) {
             return null;
         }
@@ -176,6 +181,7 @@ public class ReferenceCountedACLCache {
         }
 
         AtomicLong count = referenceCounter.get(acl);
+        System.out.println("fuck_addUsage count:" + count);
         if (count == null) {
             referenceCounter.put(acl, new AtomicLongWithEquals(1));
         } else {
@@ -194,6 +200,7 @@ public class ReferenceCountedACLCache {
         }
 
         long newCount = referenceCounter.get(acl).decrementAndGet();
+        System.out.println("fuck_removeUsage newCount:" + newCount);
         if (newCount <= 0) {
             referenceCounter.remove(acl);
             aclKeyMap.remove(longKeyMap.get(acl));
