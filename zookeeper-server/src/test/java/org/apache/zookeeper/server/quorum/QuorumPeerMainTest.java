@@ -34,8 +34,12 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -50,6 +54,7 @@ import org.apache.log4j.WriterAppender;
 import org.apache.zookeeper.AsyncCallback;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.Op;
 import org.apache.zookeeper.PortAssignment;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs.OpCode;
@@ -1511,6 +1516,123 @@ public class QuorumPeerMainTest extends QuorumPeerTestBase {
                     };
                 }
             };
+        }
+    }
+
+    @Test
+    public void testSequentialConsistency() throws Exception {
+        int srvA = 0;
+        int srvB = 1;
+        int srvC = 2;
+        int numServers = 3;
+        Servers srvs = LaunchServers(numServers);
+
+        // 0. Initialize the cluster: initially /key0 == 0 and /key1 == 0
+        String[] keys = {"/key0", "/key1"};
+        srvs.zk[srvC].multi(Arrays.asList(
+                Op.create(keys[0], "0".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT),
+                Op.create(keys[1], "0".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT)
+        ));
+        srvs.shutDownAllServers();
+        waitForAll(srvs.zk, States.CONNECTING);
+
+        // 1. Start A, B
+        srvs.mt[srvA].start();
+        srvs.mt[srvB].start();
+        waitForAll(new ZooKeeper[]{srvs.zk[srvA], srvs.zk[srvB]}, States.CONNECTED);
+
+        // Crash A and initiate write on B: /key1 = 101
+        srvs.mt[srvA].shutdown();
+        srvs.zk[srvB].setData(keys[1], "101".getBytes(), -1, null, null);
+        Thread.sleep(1000);
+
+        // Stop B
+        srvs.mt[srvB].shutdown();
+        waitForAll(new ZooKeeper[]{srvs.zk[srvA], srvs.zk[srvB]}, States.CONNECTING);
+
+        // 2. Start and stop A, B
+        srvs.mt[srvA].start();
+        srvs.mt[srvB].start();
+        waitForAll(new ZooKeeper[]{srvs.zk[srvA], srvs.zk[srvB]}, States.CONNECTED);
+        srvs.mt[srvA].shutdown();
+        srvs.mt[srvB].shutdown();
+        waitForAll(new ZooKeeper[]{srvs.zk[srvA], srvs.zk[srvB]}, States.CONNECTING);
+
+        // 3. Start A, C
+        srvs.mt[srvA].start();
+        srvs.mt[srvC].start();
+        waitForAll(new ZooKeeper[]{srvs.zk[srvA], srvs.zk[srvC]}, States.CONNECTED);
+
+        // Initiate conditional write on A: if (/key1 == 101): /key0 = 200
+        srvs.zk[srvA].getData(keys[1], false, (returnCode, key, ctx, result, stat) -> {
+            if (returnCode == KeeperException.Code.OK.intValue() && Arrays.equals(result, "101".getBytes())) {
+                srvs.zk[srvA].setData(keys[0], "200".getBytes(), -1, null, null);
+            }
+        }, null);
+        Thread.sleep(1000);
+
+        // Stop A, C
+        srvs.mt[srvA].shutdown();
+        srvs.mt[srvC].shutdown();
+        waitForAll(new ZooKeeper[]{srvs.zk[srvA], srvs.zk[srvC]}, States.CONNECTING);
+
+        // 4. Start A, B, C
+        srvs.mt[srvA].start();
+        srvs.mt[srvB].start();
+        srvs.mt[srvC].start();
+        waitForAll(srvs.zk, States.CONNECTED);
+
+        // Initiate conditional write on B: if (/key1 == 0): /key1 = 301
+        srvs.zk[srvB].getData(keys[1], false, (returnCode, key, ctx, result, stat) -> {
+            if (returnCode == KeeperException.Code.OK.intValue() && Arrays.equals(result, "0".getBytes())) {
+                srvs.zk[srvB].setData(keys[1], "301".getBytes(), -1, null, null);
+            }
+        }, null);
+        Thread.sleep(1000);
+
+        // Stop A, B, C
+        srvs.shutDownAllServers();
+        waitForAll(srvs.zk, States.CONNECTING);
+
+        // Start all servers and check that their state is allowed under sequential consistency
+        srvs.mt[srvA].start();
+        srvs.mt[srvB].start();
+        srvs.mt[srvC].start();
+        waitForAll(srvs.zk, States.CONNECTED);
+
+        int[][] values = new int[2][numServers];
+        for (int srv = 0; srv < numServers; srv++) {
+            byte[] rawValue0 = srvs.zk[srv].getData(keys[0], false, null);
+            values[0][srv] = Integer.parseInt(new String(rawValue0));
+            LOG.info("Value for /key0 on server {}: {}", srv, values[0][srv]);
+
+            byte[] rawValue1 = srvs.zk[srv].getData(keys[1], false, null);
+            values[1][srv] = Integer.parseInt(new String(rawValue1));
+            LOG.info("Value for /key1 on server {}: {}", srv, values[1][srv]);
+        }
+
+        Assert.assertTrue("Values associated with /key0 should be equal on all servers",
+                values[0][0] == values[0][1] && values[0][0] == values[0][2]);
+        Assert.assertTrue("Values associated with /key1 should be equal on all servers",
+                values[1][0] == values[1][1] && values[1][0] == values[1][2]);
+
+        List<Integer> finalValues = Arrays.asList(values[0][0], values[1][0]);
+
+        // Values associated with /key0 and /key1 that are allowed under sequential consistency,
+        // where we assume that any of the write requests may have failed.
+        Set<List<Integer>> allowedValues = new HashSet<>();
+        allowedValues.add(Arrays.asList(0, 0));
+        allowedValues.add(Arrays.asList(0, 101));
+        allowedValues.add(Arrays.asList(200, 101));
+        allowedValues.add(Arrays.asList(0, 301));
+
+        Assert.assertTrue("Final values of /key0 and /key1 should be allowed under sequential consistency",
+                allowedValues.contains(finalValues));
+
+        // Clean up
+        srvs.shutDownAllServers();
+        for (ZooKeeper zk : srvs.zk) {
+            zk.close();
         }
     }
 }
