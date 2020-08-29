@@ -733,7 +733,6 @@ public class Leader extends LearnerMaster {
                         wait(end - cur);
                         cur = Time.currentElapsedTime();
                     }
-
                     if (!tickSkip) {
                         self.tick.incrementAndGet();
                     }
@@ -774,6 +773,7 @@ public class Leader extends LearnerMaster {
                     tickSkip = !tickSkip;
                 }
                 for (LearnerHandler f : getLearners()) {
+                    System.out.println("fuck I'm leading, send ping to all learner!!! " + System.currentTimeMillis());
                     f.ping();
                 }
             }
@@ -807,6 +807,7 @@ public class Leader extends LearnerMaster {
         }
 
         // NIO should not accept conenctions
+        System.out.println("fuck_Leader.shutdown self.setZooKeeperServer(null)");
         self.setZooKeeperServer(null);
         self.adminServer.setZooKeeperServer(null);
         self.closeAllConnections();
@@ -911,6 +912,7 @@ public class Leader extends LearnerMaster {
         if (!p.hasAllQuorums()) {
             return false;
         }
+        System.out.println("fuck_Leader Proposal p: "+p+" has get AllQuorums ack good thing!!! I love it");
 
         // commit proposals in order
         if (zxid != lastCommitted + 1) {
@@ -957,11 +959,15 @@ public class Leader extends LearnerMaster {
             //turnOffFollowers();
         } else {
             p.request.logLatency(ServerMetrics.getMetrics().QUORUM_ACK_LATENCY);
+            System.out.println("fuck_Leader I receive enough acks start to send commit to followes (zxid): "+zxid);
             commit(zxid);
             inform(p);
         }
         zk.commitProcessor.commit(p.request);
+        System.out.println("fuck_Leader zk.commitProcessor.commit(p.request): "+p.request
+        +",pendingSyncs.containsKey(zxid):" + pendingSyncs.containsKey(zxid));
         if (pendingSyncs.containsKey(zxid)) {
+            System.out.println("fuck_Leader pendingSyncs.containsKey(zxid) send SYNC to all learns");
             for (LearnerSyncRequest r : pendingSyncs.remove(zxid)) {
                 sendSync(r);
             }
@@ -1082,6 +1088,7 @@ public class Leader extends LearnerMaster {
          * @see org.apache.zookeeper.server.RequestProcessor#processRequest(org.apache.zookeeper.server.Request)
          */
         public void processRequest(Request request) throws RequestProcessorException {
+            System.out.println("fuck_Leader.ToBeAppliedRequestProcessor request: "+request);
             next.processRequest(request);
 
             // The only requests that should be on toBeApplied are write
@@ -1091,6 +1098,7 @@ public class Leader extends LearnerMaster {
             if (request.getHdr() != null) {
                 long zxid = request.getHdr().getZxid();
                 Iterator<Proposal> iter = leader.toBeApplied.iterator();
+                System.out.println("fuck_Leader.ToBeAppliedRequestProcessor.ToBeAppliedRequestProcessor: " + leader.toBeApplied);
                 if (iter.hasNext()) {
                     Proposal p = iter.next();
                     if (p.request != null && p.request.zxid == zxid) {
@@ -1149,6 +1157,7 @@ public class Leader extends LearnerMaster {
             lastCommitted = zxid;
         }
         QuorumPacket qp = new QuorumPacket(Leader.COMMIT, zxid, null, null);
+        System.out.println("fuck_Leader send COMMIT packet");
         sendPacket(qp);
         ServerMetrics.getMetrics().COMMIT_COUNT.add(1);
     }
@@ -1260,6 +1269,7 @@ public class Leader extends LearnerMaster {
 
             lastProposed = p.packet.getZxid();
             outstandingProposals.put(lastProposed, p);
+            System.out.println("fuck_Leader send PROPOSAL packet lastProposed:"+lastProposed+",outstandingProposals:"+outstandingProposals);
             sendPacket(pp);
         }
         ServerMetrics.getMetrics().PROPOSAL_COUNT.add(1);
@@ -1274,6 +1284,7 @@ public class Leader extends LearnerMaster {
 
     public synchronized void processSync(LearnerSyncRequest r) {
         if (outstandingProposals.isEmpty()) {
+            System.out.println("fuck_Leader outstandingProposals.isEmpty() leader sends SYNC at once");
             sendSync(r);
         } else {
             List<LearnerSyncRequest> l = pendingSyncs.get(lastProposed);
@@ -1282,6 +1293,7 @@ public class Leader extends LearnerMaster {
             }
             l.add(r);
             pendingSyncs.put(lastProposed, l);
+            System.out.println("fuck_Leader outstandingProposals.is NOt Empty() pendingSyncs:"+pendingSyncs);
         }
     }
 
@@ -1290,6 +1302,7 @@ public class Leader extends LearnerMaster {
      */
     public void sendSync(LearnerSyncRequest r) {
         QuorumPacket qp = new QuorumPacket(Leader.SYNC, 0, null, null);
+        System.out.println("fuck_Leader leader sends SYNC to one follower. LearnerSyncRequest:"+r);
         r.fh.queuePacket(qp);
     }
 

@@ -365,7 +365,9 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory {
             try {
                 while (!stopped) {
                     try {
+                        System.out.println("fuck_NIOServerCnxnFactory.SelectorThread.run#select");
                         select();
+                        System.out.println("fuck_NIOServerCnxnFactory.SelectorThread.run#processAcceptedConnections");
                         processAcceptedConnections();
                         processInterestOpsUpdateRequests();
                     } catch (RuntimeException e) {
@@ -452,6 +454,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory {
                 SelectionKey key = null;
                 try {
                     key = accepted.register(selector, SelectionKey.OP_READ);
+                    System.out.println("fuck_NIOServerCnxnFactory.SelectorThread.run#processAcceptedConnections#createConnection");
                     NIOServerCnxn cnxn = createConnection(accepted, key, this);
                     key.attach(cnxn);
                     addCnxn(cnxn);
@@ -499,6 +502,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory {
         }
 
         public void doWork() throws InterruptedException {
+            //System.out.println("fuck_NIOServerCnxnFactory doWork");
             if (!key.isValid()) {
                 selectorThread.cleanupSelectionKey(key);
                 return;
@@ -820,6 +824,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory {
     }
 
     protected NIOServerCnxn createConnection(SocketChannel sock, SelectionKey sk, SelectorThread selectorThread) throws IOException {
+        System.out.println("fuck_NIOServerCnxnFactory.createConnection zkServer:" + zkServer);
         return new NIOServerCnxn(zkServer, sock, sk, this, selectorThread);
     }
 
@@ -839,6 +844,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory {
     @SuppressWarnings("unchecked")
     public void closeAll(ServerCnxn.DisconnectReason reason) {
         // clear all the connections on which we are selecting
+        System.out.println("fuck_NIOServerCnxnFactory.closeAll");
         for (ServerCnxn cnxn : cnxns) {
             try {
                 // This will remove the cnxn from cnxns
