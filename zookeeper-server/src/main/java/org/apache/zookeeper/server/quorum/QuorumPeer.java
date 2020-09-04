@@ -1047,6 +1047,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
         if (quorumConfig == null) {
             quorumConfig = new QuorumMaj(quorumPeers);
         }
+        LOG.info("fuck gouzao QuorumPeer quorumConfig:{}", quorumConfig);
         setQuorumVerifier(quorumConfig, false);
         adminServer = AdminServerFactory.createAdminServer();
     }
@@ -1858,8 +1859,8 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
             if ((quorumVerifier != null) && (quorumVerifier.getVersion() >= qv.getVersion())) {
                 // this is normal. For example - server found out about new config through FastLeaderElection gossiping
                 // and then got the same config in UPTODATE message so its already known
-                LOG.debug(
-                    "{} setQuorumVerifier called with known or old config {}. Current version: {}",
+                LOG.info(
+                    "fuck {} setQuorumVerifier called with known or old config {}. Current version: {}",
                     getId(),
                     qv.getVersion(),
                     quorumVerifier.getVersion());
@@ -2171,6 +2172,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
         // update last committed quorum verifier, write the new config to disk
         // and restart leader election if config changed.
         QuorumVerifier prevQV = setQuorumVerifier(qv, true);
+        LOG.info("fuck QuorumPeer.processReconfig setQuorumVerifier qv:{}, prevQV:{}", qv, prevQV);
 
         // There is no log record for the initial config, thus after syncing
         // with leader

@@ -271,7 +271,9 @@ public class Learner {
         QuorumServer leaderServer = null;
         // Find the leader by id
         Vote current = self.getCurrentVote();
+        LOG.info("fuck Learner#findLeader#method currentVote:{}, self.getView():{}", current, self.getView());
         for (QuorumServer s : self.getView().values()) {
+            LOG.info("fuck Learner#findLeader#method-bian-li QuorumServer:{}", s);
             if (s.id == current.getId()) {
                 // Ensure we have the leader's correct IP address before
                 // attempting to connect.
@@ -314,6 +316,7 @@ public class Learner {
 
         this.leaderAddr = multiAddr;
         Set<InetSocketAddress> addresses;
+        LOG.info("fuck connectToLeader multiAddr:{}, isMultiAddressReachabilityCheckEnabled:{}", multiAddr, self.isMultiAddressReachabilityCheckEnabled());
         if (self.isMultiAddressReachabilityCheckEnabled()) {
             // even if none of the addresses are reachable, we want to try to establish connection
             // see ZOOKEEPER-3758
@@ -321,6 +324,7 @@ public class Learner {
         } else {
             addresses = multiAddr.getAllAddresses();
         }
+        LOG.info("fuck connectToLeader addresses:{}", addresses);
         ExecutorService executor = Executors.newFixedThreadPool(addresses.size());
         CountDownLatch latch = new CountDownLatch(addresses.size());
         AtomicReference<Socket> socket = new AtomicReference<>(null);
@@ -711,6 +715,7 @@ public class Learner {
                 case Leader.UPTODATE:
                     LOG.info("Learner received UPTODATE message");
                     if (newLeaderQV != null) {
+                        LOG.info("Learner received UPTODATE message newLeaderQV:{}", newLeaderQV);
                         boolean majorChange = self.processReconfig(newLeaderQV, null, null, true);
                         if (majorChange) {
                             throw new Exception("changes proposed in reconfig");
@@ -731,6 +736,7 @@ public class Learner {
                             QuorumVerifier qv = self.configFromString(new String(qp.getData()));
                             self.setLastSeenQuorumVerifier(qv, true);
                             newLeaderQV = qv;
+                            LOG.info("fuck Learner received NEWLEADER message newLeaderQV:{}", newLeaderQV);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

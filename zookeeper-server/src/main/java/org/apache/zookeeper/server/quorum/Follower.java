@@ -83,6 +83,7 @@ public class Follower extends Learner {
         try {
             self.setZabState(QuorumPeer.ZabState.DISCOVERY);
             QuorumServer leaderServer = findLeader();
+            LOG.info("fuck Follower.followLeader findLeader leaderServer.addr:{}", leaderServer.addr);
             try {
                 connectToLeader(leaderServer.addr, leaderServer.hostname);
                 connectionTime = System.currentTimeMillis();

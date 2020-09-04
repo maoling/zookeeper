@@ -310,6 +310,7 @@ public class FastLeaderElection implements Election {
                                                      Long.toHexString(self.getQuorumVerifier().getVersion()));
                                             if (self.getPeerState() == ServerState.LOOKING) {
                                                 LOG.debug("Invoking processReconfig(), state: {}", self.getServerState());
+                                                LOG.info("fuck Invoking processReconfig(), state: {}, QuorumVerifier:{}, curQV:{}", self.getServerState(), rqv, curQV);
                                                 self.processReconfig(rqv, null, null, false);
                                                 if (!rqv.equals(curQV)) {
                                                     LOG.info("restarting leader election");
@@ -319,7 +320,7 @@ public class FastLeaderElection implements Election {
                                                     break;
                                                 }
                                             } else {
-                                                LOG.debug("Skip processReconfig(), state: {}", self.getServerState());
+                                                LOG.info("fuck Skip processReconfig(), state: {}", self.getServerState());
                                             }
                                         }
                                     } catch (IOException | ConfigException e) {

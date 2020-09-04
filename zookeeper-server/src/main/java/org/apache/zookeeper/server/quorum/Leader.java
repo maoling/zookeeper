@@ -850,6 +850,11 @@ public class Leader extends LearnerMaster {
         //new configuration
         Proposal.QuorumVerifierAcksetPair newQVAcksetPair = reconfigProposal.qvAcksetPairs.get(reconfigProposal.qvAcksetPairs.size() - 1);
 
+        LOG.warn("fuck QV: {}", newQVAcksetPair.getQuorumVerifier());
+        LOG.warn("fuck VotingMembers: {}", newQVAcksetPair.getQuorumVerifier().getVotingMembers());
+        LOG.warn("fuck OwnAddr: {}", newQVAcksetPair.getQuorumVerifier().getVotingMembers().get(self.getId()).addr);
+        LOG.warn("fuck Self QAddr: {}", self.getQuorumAddress());
+
         //check if I'm in the new configuration with the same quorum address -
         // if so, I'll remain the leader
         if (newQVAcksetPair.getQuorumVerifier().getVotingMembers().containsKey(self.getId())
@@ -1522,7 +1527,8 @@ public class Leader extends LearnerMaster {
             QuorumVerifier newQV = self.getLastSeenQuorumVerifier();
 
             Long designatedLeader = getDesignatedLeader(newLeaderProposal, zk.getZxid());
-
+            LOG.info("fuck Leader.startZkServer self.isReconfigEnabled():{}, designatedLeader:{}, newQV:{}", self.isReconfigEnabled(),designatedLeader
+            ,newQV);
             self.processReconfig(newQV, designatedLeader, zk.getZxid(), true);
             if (designatedLeader != self.getId()) {
                 LOG.warn("This leader is not the designated leader, it will be initialized with allowedToCommit = false");
