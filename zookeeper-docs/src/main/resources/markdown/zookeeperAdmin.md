@@ -1162,6 +1162,15 @@ property, when available, is noted below.
 
     The default value is false.
 
+* *digestAlg* :
+    (Java system property: **zookeeper.DigestAuthenticationProvider.digestAlg**)
+     **New in 3.7.0:**
+    set ACL digest algorithm. The optional value is: `SHA1`, `SHA-256`, `SHA3-256`. The default one is: `SHA1` which will
+    be deprecated in the future for security issue.
+    ###### Note
+    >Set this property the same value in all the server.
+     Regenerate `superDigest` when migrating to new algorithm. SetAcl for znode which already had a digest auth of old algorithm.
+
 
 <a name="sc_clusterOptions"></a>
 
