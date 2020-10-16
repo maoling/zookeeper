@@ -19,12 +19,13 @@
 package org.apache.zookeeper.test;
 
 import org.apache.zookeeper.server.auth.DigestStrategyFactory;
-import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class AuthSHA3Test extends AuthTest {
 
     @BeforeEach
+    @Override
     public void setup() {
         // password is test
         System.setProperty("zookeeper.DigestAuthenticationProvider.digestAlg", DigestStrategyFactory.DigestAlgEnum.SHA3_256.getName());
