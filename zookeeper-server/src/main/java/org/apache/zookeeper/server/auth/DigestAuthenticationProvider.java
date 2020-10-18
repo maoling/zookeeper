@@ -34,38 +34,24 @@ public class DigestAuthenticationProvider implements AuthenticationProvider {
 
     private static final String DEFAULT_DIGEST_ALGORITHM = "SHA1";
 
-    private static final String DIGEST_ALGORITHM = System.getProperty("zookeeper.DigestAuthenticationProvider.digestAlg", DEFAULT_DIGEST_ALGORITHM);
+    public static final String DIGEST_ALGORITHM_KEY = "zookeeper.DigestAuthenticationProvider.digestAlg";
+
+    private static final String DIGEST_ALGORITHM = System.getProperty(DIGEST_ALGORITHM_KEY, DEFAULT_DIGEST_ALGORITHM);
 
     static {
-        //
+        // To keep backward compatibility, the SHA1 still uses the implementation of JDK, other algorithms
+        // use the implementation of BouncyCastle which supports more algorithms than native JDK.
         if (!DIGEST_ALGORITHM.equals(DEFAULT_DIGEST_ALGORITHM)) {
             Security.addProvider(new BouncyCastleProvider());
         }
 
         try {
+            //sanity check, pre-check the availability of the algorithm, in case of some unexpected exceptions in the runtime
             generateDigest(DEFAULT_DIGEST_ALGORITHM);
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("don't support this ACL digest algorithm:" + DIGEST_ALGORITHM);
+            throw new RuntimeException("don't support this ACL digest algorithm: " + DIGEST_ALGORITHM);
         }
-
         LOG.info("ACL digest algorithm is: {}", DIGEST_ALGORITHM);
-    }
-
-//    public void setDigestAlgorithm(String digestAlgorithm) {
-//        setDigestAlgorithmValue(digestAlgorithm);
-//    }
-//
-//    public static void setDigestAlgorithmValue(String digestAlgorithm) {
-//        DigestAuthenticationProvider.digestAlgorithm = digestAlgorithm;
-//    }
-
-    public DigestAuthenticationProvider() {
-         //this.digestAlgorithm = digestAlgorithm;
-//        if (StringUtils.isEmpty(digestAlgorithm)) {
-//            setDigestAlgorithm(SHA_1.getName());
-//        } else {
-//            setDigestAlgorithm(digestAlgorithm);
-//        }
     }
 
     /** specify a command line property with key of

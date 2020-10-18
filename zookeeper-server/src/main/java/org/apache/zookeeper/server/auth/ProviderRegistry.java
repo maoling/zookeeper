@@ -34,24 +34,6 @@ public class ProviderRegistry {
     private static boolean initialized = false;
     private static final Map<String, AuthenticationProvider> authenticationProviders = new HashMap<>();
 
-    //private static final String digestAlgProp = System.getProperty("zookeeper.DigestAuthenticationProvider.digestAlg", "SHA1");
-
-//    static {
-//        if (!StringUtils.isEmpty(digestAlgProp)) {
-//            boolean validDigest = false;
-//            for (DigestAlgEnum digest : DigestAlgEnum.values()) {
-//                if (digestAlgProp.equals(digest.getName())) {
-//                    validDigest = true;
-//                    break;
-//                }
-//            }
-//            if (!validDigest) {
-//                throw new IllegalArgumentException("don't support this digest algorithm:" + digestAlgProp + ", supported digest algorithms are: " + DigestStrategyFactory.DigestAlgEnum.getValues());
-//            }
-//        }
-//        LOG.info("ACL digest algorithm is: {}", StringUtils.isEmpty(digestAlgProp) ? DigestAlgEnum.SHA_1.getName() : digestAlgProp);
-//    }
-
     //VisibleForTesting
     public static void reset() {
         synchronized (ProviderRegistry.class) {

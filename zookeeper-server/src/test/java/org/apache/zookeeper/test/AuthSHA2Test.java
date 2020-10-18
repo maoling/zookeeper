@@ -30,7 +30,7 @@ public class AuthSHA2Test extends AuthTest {
     @Override
     public void setup() {
         // password is test
-        System.setProperty("zookeeper.DigestAuthenticationProvider.digestAlg", DigestAlgEnum.SHA_256.getName());
+        System.setProperty(DigestAuthenticationProvider.DIGEST_ALGORITHM_KEY, DigestAlgEnum.SHA_256.getName());
         System.setProperty("zookeeper.DigestAuthenticationProvider.superDigest", "super:wjySwxg860UATFtciuZ1lpzrCHrPeov6SPu/ZD56uig=");
         System.setProperty("zookeeper.authProvider.1", "org.apache.zookeeper.test.InvalidAuthProvider");
     }

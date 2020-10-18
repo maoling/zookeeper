@@ -54,7 +54,7 @@ public class AuthTest extends ClientBase {
     @AfterEach
     public void teardown() {
         System.clearProperty("zookeeper.DigestAuthenticationProvider.superDigest");
-        System.clearProperty("zookeeper.DigestAuthenticationProvider.digestAlg");
+        System.clearProperty(DigestAuthenticationProvider.DIGEST_ALGORITHM_KEY);
     }
 
     protected final CountDownLatch authFailed = new CountDownLatch(1);
