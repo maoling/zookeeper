@@ -18,12 +18,13 @@
 
 package org.apache.zookeeper.server.auth;
 
-import static org.apache.zookeeper.server.auth.DigestStrategyFactory.DigestAlgEnum.SHA_1;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.common.StringUtils;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.server.ServerCnxn;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,22 +32,40 @@ public class DigestAuthenticationProvider implements AuthenticationProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(DigestAuthenticationProvider.class);
 
-    private static String digestAlgorithm;
+    private static final String DEFAULT_DIGEST_ALGORITHM = "SHA1";
 
-    public void setDigestAlgorithm(String digestAlgorithm) {
-        setDigestAlgorithmValue(digestAlgorithm);
-    }
+    private static final String DIGEST_ALGORITHM = System.getProperty("zookeeper.DigestAuthenticationProvider.digestAlg", DEFAULT_DIGEST_ALGORITHM);
 
-    public static void setDigestAlgorithmValue(String digestAlgorithm) {
-        DigestAuthenticationProvider.digestAlgorithm = digestAlgorithm;
-    }
-
-    public DigestAuthenticationProvider(String digestAlgorithm) {
-        if (StringUtils.isEmpty(digestAlgorithm)) {
-            setDigestAlgorithm(SHA_1.getName());
-        } else {
-            setDigestAlgorithm(digestAlgorithm);
+    static {
+        //
+        if (!DIGEST_ALGORITHM.equals(DEFAULT_DIGEST_ALGORITHM)) {
+            Security.addProvider(new BouncyCastleProvider());
         }
+
+        try {
+            generateDigest(DEFAULT_DIGEST_ALGORITHM);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("don't support this ACL digest algorithm:" + DIGEST_ALGORITHM);
+        }
+
+        LOG.info("ACL digest algorithm is: {}", DIGEST_ALGORITHM);
+    }
+
+//    public void setDigestAlgorithm(String digestAlgorithm) {
+//        setDigestAlgorithmValue(digestAlgorithm);
+//    }
+//
+//    public static void setDigestAlgorithmValue(String digestAlgorithm) {
+//        DigestAuthenticationProvider.digestAlgorithm = digestAlgorithm;
+//    }
+
+    public DigestAuthenticationProvider() {
+         //this.digestAlgorithm = digestAlgorithm;
+//        if (StringUtils.isEmpty(digestAlgorithm)) {
+//            setDigestAlgorithm(SHA_1.getName());
+//        } else {
+//            setDigestAlgorithm(digestAlgorithm);
+//        }
     }
 
     /** specify a command line property with key of
@@ -107,8 +126,13 @@ public class DigestAuthenticationProvider implements AuthenticationProvider {
 
     public static String generateDigest(String idPassword) throws NoSuchAlgorithmException {
         String[] parts = idPassword.split(":", 2);
-        byte[] digestPassword = DigestStrategyFactory.getInstance(digestAlgorithm).generateDigest(idPassword);
-        return parts[0] + ":" + base64Encode(digestPassword);
+        byte[] digest = digest(idPassword);
+        return parts[0] + ":" + base64Encode(digest);
+    }
+
+    // @VisibleForTesting
+    public static byte[] digest(String idPassword) throws NoSuchAlgorithmException {
+        return MessageDigest.getInstance(DIGEST_ALGORITHM).digest(idPassword.getBytes());
     }
 
     public KeeperException.Code handleAuthentication(ServerCnxn cnxn, byte[] authData) {
@@ -154,9 +178,8 @@ public class DigestAuthenticationProvider implements AuthenticationProvider {
      * @throws NoSuchAlgorithmException
      */
     public static void main(String[] args) throws NoSuchAlgorithmException {
-        DigestAuthenticationProvider provider = new DigestAuthenticationProvider(args[0]);
-        for (int i = 1; i < args.length; i++) {
-            System.out.println(args[i] + "->" + provider.generateDigest(args[i]));
+        for (int i = 0; i < args.length; i++) {
+            System.out.println(args[i] + "->" + generateDigest(args[i]));
         }
     }
 

@@ -18,7 +18,9 @@
 
 package org.apache.zookeeper.test;
 
-import org.apache.zookeeper.server.auth.DigestStrategyFactory;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.security.NoSuchAlgorithmException;
+import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +30,7 @@ public class AuthSHA3Test extends AuthTest {
     @Override
     public void setup() {
         // password is test
-        System.setProperty("zookeeper.DigestAuthenticationProvider.digestAlg", DigestStrategyFactory.DigestAlgEnum.SHA3_256.getName());
+        System.setProperty("zookeeper.DigestAuthenticationProvider.digestAlg", DigestAlgEnum.SHA3_256.getName());
         System.setProperty("zookeeper.DigestAuthenticationProvider.superDigest", "super:cRy/KPYuDpW/dtsepniTMpuiuupnWgdU9txltIfv3hA=");
         System.setProperty("zookeeper.authProvider.1", "org.apache.zookeeper.test.InvalidAuthProvider");
     }
@@ -56,5 +58,21 @@ public class AuthSHA3Test extends AuthTest {
     @Test
     public void testOrdinaryACL() throws Exception {
         super.testOrdinaryACL();
+    }
+
+    @Test
+    public void testGenerateDigest() throws NoSuchAlgorithmException {
+        assertEquals("super:cRy/KPYuDpW/dtsepniTMpuiuupnWgdU9txltIfv3hA=", DigestAuthenticationProvider.generateDigest("super:test"));
+        assertEquals("super:gM3M1QcrKC6b+h4oZ5Ixc4GTVaAsggI+AqkUaF6E1Is=", DigestAuthenticationProvider.generateDigest("super:zookeeper"));
+        assertEquals("super:2Ww7VUqTohd3lX/Vf4Nvw+GxbmOsX1p337L7Bnks4L8=", DigestAuthenticationProvider.generateDigest(("super:foo")));
+        assertEquals("super:Ft5s2Rtxr8zyz16feKiFR/8yqa6JoNEJ0In73aXojE8=", DigestAuthenticationProvider.generateDigest(("super:bar")));
+    }
+
+    @Test
+    public void testDigest() throws NoSuchAlgorithmException {
+        assertEquals("36f028580bb02cc8272a9a020f4200e346e276ae664e45ee80745574e2f5ab80", getGeneratedDigestStr(DigestAuthenticationProvider.digest("test")));
+        assertEquals("af4c1abc2deaa6edffc7ce34edeb8c03ee9a1488b64fd318ddb93b4b7f1c0746", getGeneratedDigestStr(DigestAuthenticationProvider.digest("zookeeper")));
+        assertEquals("76d3bc41c9f588f7fcd0d5bf4718f8f84b1c41b20882703100b9eb9413807c01", getGeneratedDigestStr(DigestAuthenticationProvider.digest(("foo"))));
+        assertEquals("cceefd7e0545bcf8b6d19f3b5750c8a3ee8350418877bc6fb12e32de28137355", getGeneratedDigestStr(DigestAuthenticationProvider.digest(("bar"))));
     }
 }
