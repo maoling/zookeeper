@@ -435,14 +435,15 @@ public class FinalRequestProcessor implements RequestProcessor {
                 if (n == null) {
                     throw new KeeperException.NoNodeException();
                 }
-                zks.checkACL(
-                    request.cnxn,
-                    zks.getZKDatabase().aclForNode(n),
-                    ZooDefs.Perms.READ | ZooDefs.Perms.ADMIN, request.authInfo, path,
-                    null);
-
+                System.out.println("fuck_FinalRequestProcessor_case OpCode.getACL--------1");
+//                zks.checkACL(
+//                    request.cnxn,
+//                    zks.getZKDatabase().aclForNode(n),
+//                    ZooDefs.Perms.READ | ZooDefs.Perms.ADMIN, request.authInfo, path,
+//                    null);
                 Stat stat = new Stat();
                 List<ACL> acl = zks.getZKDatabase().getACL(path, stat);
+                System.out.println("fuck_FinalRequestProcessor_case OpCode.getACL--------2, acl:" + acl);
                 requestPathMetricsCollector.registerRequest(request.type, getACLRequest.getPath());
 
                 try {
@@ -465,6 +466,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                             acl1.add(a);
                         }
                     }
+                    System.out.println("fuck_FinalRequestProcessor_case_OpCode.getACL_NoAuthException_acl1:" + acl1);
                     rsp = new GetACLResponse(acl1, stat);
                 }
                 break;
@@ -508,6 +510,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                 if (n == null) {
                     throw new KeeperException.NoNodeException();
                 }
+                System.out.println("fuck_FinalRequestProcessor_case OpCode.getChildren2_before_zks.checkACL");
                 zks.checkACL(
                     request.cnxn,
                     zks.getZKDatabase().aclForNode(n),
