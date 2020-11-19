@@ -561,7 +561,9 @@ public class Learner {
             if (qp.getType() == Leader.DIFF) {
                 LOG.info("Getting a diff from the leader 0x{}", Long.toHexString(qp.getZxid()));
                 self.setSyncMode(QuorumPeer.SyncMode.DIFF);
-                snapshotNeeded = false;
+                if (zk.existSnapshot()) {
+                    snapshotNeeded = false;
+                }
             } else if (qp.getType() == Leader.SNAP) {
                 self.setSyncMode(QuorumPeer.SyncMode.SNAP);
                 LOG.info("Getting a snapshot from leader 0x{}", Long.toHexString(qp.getZxid()));

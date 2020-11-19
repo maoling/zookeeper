@@ -364,4 +364,54 @@ public class LearnerTest extends ZKTestCase {
             TestUtils.deleteFileRecursively(tmpFile);
         }
     }
+
+    /**
+     * Test for whether follower could execute
+     * takeSnapshot method while snapshot not exist
+     * .
+     */
+    @Test
+    public void diffSyncTest() throws Exception {
+        File tmpFile = File.createTempFile("test", ".dir", testData);
+        tmpFile.delete();
+        try {
+            FileTxnSnapLog ftsl = new FileTxnSnapLog(tmpFile, tmpFile);
+            SimpleLearner sl = new SimpleLearner(ftsl);
+            sl.self.setTxnFactory(new FileTxnSnapLog(tmpFile, tmpFile));
+            long startZxid = sl.zk.getLastProcessedZxid();
+
+            // Set up bogus streams
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            BinaryOutputArchive oa = BinaryOutputArchive.getArchive(baos);
+            sl.leaderOs = BinaryOutputArchive.getArchive(new ByteArrayOutputStream());
+
+            // make streams and socket do something innocuous
+            sl.bufferedOutput = new BufferedOutputStream(System.out);
+            sl.sock = new Socket();
+
+            // fake messages from the server
+            QuorumPacket qp = new QuorumPacket(Leader.DIFF, 3, null, null);
+            oa.writeRecord(qp, null);
+
+            qp = new QuorumPacket(Leader.NEWLEADER, 3, null, null);
+            oa.writeRecord(qp, null);
+
+            qp = new QuorumPacket(Leader.UPTODATE, 3, null, null);
+            oa.writeRecord(qp, null);
+
+            // setup the messages to be streamed to follower
+            sl.leaderIs = BinaryInputArchive.getArchive(new ByteArrayInputStream(baos.toByteArray()));
+
+            try {
+                sl.syncWithLeader(3);
+            } catch (UnsupportedOperationException e) {
+            }
+            assert sl.zk.existSnapshot();
+            sl.zk.shutdown();
+            sl = new SimpleLearner(ftsl);
+            assertEquals(startZxid, sl.zk.getLastProcessedZxid());
+        } finally {
+            TestUtils.deleteFileRecursively(tmpFile);
+        }
+    }
 }

@@ -21,6 +21,7 @@ package org.apache.zookeeper.server;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -528,6 +529,17 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         long elapsed = Time.currentElapsedTime() - start;
         LOG.info("Snapshot taken in {} ms", elapsed);
         ServerMetrics.getMetrics().SNAPSHOT_TIME.add(elapsed);
+    }
+
+    public boolean existSnapshot() {
+        File snapShotDir = txnLogFactory.getSnapDir();
+        String[] snaps = snapShotDir.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.contains("snapshot");
+            }
+        });
+        return snaps != null && snaps.length > 0;
     }
 
     @Override
