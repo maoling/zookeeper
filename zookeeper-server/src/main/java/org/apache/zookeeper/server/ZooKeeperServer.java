@@ -76,6 +76,7 @@ import org.apache.zookeeper.server.SessionTracker.SessionExpirer;
 import org.apache.zookeeper.server.auth.ProviderRegistry;
 import org.apache.zookeeper.server.auth.ServerAuthenticationProvider;
 import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
+import org.apache.zookeeper.server.persistence.Util;
 import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
 import org.apache.zookeeper.server.quorum.ReadOnlyZooKeeperServer;
 import org.apache.zookeeper.server.util.JvmPauseMonitor;
@@ -533,12 +534,8 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
 
     public boolean existSnapshot() {
         File snapShotDir = txnLogFactory.getSnapDir();
-        String[] snaps = snapShotDir.list(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.contains("snapshot");
-            }
-        });
+        //snapShotDir.str().anyMatch(str -> str.equals("a"));
+        String[] snaps = snapShotDir.list((dir, name) -> Util.isSnapshotFileName(name));
         return snaps != null && snaps.length > 0;
     }
 
@@ -2192,4 +2189,11 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         return zkShutdownHandler;
     }
 
+
+    public static void main(String[] args) {
+        File snapShotDir = new File("/data/software/zookeeper/zkdata3/version-2");
+        //snapShotDir.str().anyMatch(str -> str.equals("a"));
+        String[] snaps = snapShotDir.list((dir, name) -> Util.isSnapshotFileName(name));
+        System.out.println("snaps:" + snaps.length);
+    }
 }
