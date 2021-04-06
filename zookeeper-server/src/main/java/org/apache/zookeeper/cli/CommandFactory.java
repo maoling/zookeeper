@@ -50,6 +50,7 @@ public class CommandFactory {
         GET_EPHEMERALS(GetEphemeralsCommand::new),
         GET_ALL_CHILDREN_NUMBER(GetAllChildrenNumberCommand::new),
         VERSION(VersionCommand::new),
+        DOG(DogCommand::new),
         ADD_WATCH(AddWatchCommand::new),
         WHO_AM_I(WhoAmICommand::new);
 
