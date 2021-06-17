@@ -34,8 +34,6 @@ if test "$with_cppunit" = "no" ; then
    CPPUNIT_PATH="No_CPPUNIT"
    CPPUNIT_INCLUDE=
    CPPUNIT_LIBS=
-else
-   CHECK_CPPUNIT(1.10.2)
 fi
 
 dnl OpenSSL
