@@ -41,6 +41,7 @@ import org.apache.zookeeper.Quotas;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs.OpCode;
+import org.apache.zookeeper.common.Time;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.data.Stat;
 import org.apache.zookeeper.metrics.Counter;
@@ -203,6 +204,9 @@ public abstract class ServerCnxn implements Stats, Watcher {
                                      String cacheKey, Stat stat, int opCode) throws IOException {
         byte[] header = serializeRecord(h);
         byte[] data = null;
+        long timeSpentGetCache = -1;
+        long timeSpentSerialize = -1;
+        long timeSpentMissCacheSerialize = -1;
         if (r != null) {
             ResponseCache cache = null;
             Counter cacheHit = null, cacheMiss = null;
@@ -228,20 +232,39 @@ public abstract class ServerCnxn implements Stats, Watcher {
                 //
                 // NB: Tag is ignored both during cache lookup and serialization,
                 // since is is not used in read responses, which are being cached.
+                long now = System.nanoTime();
                 data = cache.get(cacheKey, stat);
+                timeSpentGetCache = System.nanoTime() - now;
+                LOG.info("fuck LFU size:{}, cache:{}", cache.getCache().size(), cache.getCache().toString());
+//                if (cache.getCache() != null && cache.getCache().size() > 0) {
+//                    cache.getCache().forEach((k, v)-> {
+//                        if (k == null || v == null) {
+//                            return;
+//                        }
+//                        LOG.info("fuck LFU k:{}, v:{}", k, v.toString());
+//                    });
+//                }
+                LOG.info("fuck cache.get(cacheKey, stat): data:{}", data == null ? "" : new String(data));
                 if (data == null) {
                     // Cache miss, serialize the response and put it in cache.
+                    now = System.nanoTime();
                     data = serializeRecord(r);
+                    timeSpentMissCacheSerialize = System.nanoTime() - now;
                     cache.put(cacheKey, data, stat);
                     cacheMiss.add(1);
                 } else {
                     cacheHit.add(1);
                 }
             } else {
+                long now = System.nanoTime();
                 data = serializeRecord(r);
+                timeSpentSerialize = System.nanoTime() - now;
             }
         }
         int dataLength = data == null ? 0 : data.length;
+        LOG.info("fuck Get time measure cacheKey:{}, dataLength:{}, timeSpentGetCache:{}, timeSpentMissCacheSerialize:{}"
+        + ", timeSpentSerialize:{}",
+        cacheKey, dataLength, timeSpentGetCache, timeSpentMissCacheSerialize, timeSpentSerialize);
         int packetLength = header.length + dataLength;
         ServerStats serverStats = serverStats();
         if (serverStats != null) {

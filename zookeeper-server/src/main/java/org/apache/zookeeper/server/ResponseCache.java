@@ -32,21 +32,26 @@ public class ResponseCache {
     // Magic number chosen to be "big enough but not too big"
     public static final int DEFAULT_RESPONSE_CACHE_SIZE = 400;
     private final int cacheSize;
-    private static class Entry {
+    public static class Entry {
         public Stat stat;
         public byte[] data;
     }
 
-    private final Map<String, Entry> cache;
+    public final Map<String, Entry> cache;
 
     public ResponseCache(int cacheSize, String requestType) {
         this.cacheSize = cacheSize;
-        cache = Collections.synchronizedMap(new LRUCache<>(cacheSize));
-        LOG.info("{} response cache size is initialized with value {}.", requestType, cacheSize);
+        //cache = Collections.synchronizedMap(new LRUCache<>(cacheSize));
+        cache = Collections.synchronizedMap(new LFUCache<>(cacheSize, (float) 0.01));
+        LOG.info("LFU {} response cache size is initialized with value {}.", requestType, cacheSize);
     }
 
     public int getCacheSize() {
         return cacheSize;
+    }
+
+    public Map<String, Entry> getCache() {
+        return cache;
     }
 
     public void put(String path, byte[] data, Stat stat) {
