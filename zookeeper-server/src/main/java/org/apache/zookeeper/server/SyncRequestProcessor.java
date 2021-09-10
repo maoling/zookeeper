@@ -143,7 +143,10 @@ public class SyncRequestProcessor extends ZooKeeperCriticalThread implements Req
     private boolean shouldSnapshot() {
         int logCount = zks.getZKDatabase().getTxnCount();
         long logSize = zks.getZKDatabase().getTxnSize();
-        return (logCount > (snapCount / 2 + randRoll))
+        boolean logCountFlag = logCount > (snapCount / 2 + randRoll);
+        LOG.info("fuck shouldSnapshot. logCountFlag:{}, logCount:{}, snapCount:{}, randRoll:{}",
+        logCountFlag, logCount, snapCount, randRoll);
+        return (logCountFlag)
                || (snapSizeInBytes > 0 && logSize > (snapSizeInBytes / 2 + randSize));
     }
 
@@ -176,7 +179,7 @@ public class SyncRequestProcessor extends ZooKeeperCriticalThread implements Req
 
                 long startProcessTime = Time.currentElapsedTime();
                 ServerMetrics.getMetrics().SYNC_PROCESSOR_QUEUE_TIME.add(startProcessTime - si.syncQueueStartTime);
-
+                LOG.info("fuck SyncRequestProcessor Request:{}, Header:{}", si, si.getHdr());
                 // track the number of records written to the log
                 if (!si.isThrottled() && zks.getZKDatabase().append(si)) {
                     if (shouldSnapshot()) {
@@ -190,6 +193,7 @@ public class SyncRequestProcessor extends ZooKeeperCriticalThread implements Req
                             new ZooKeeperThread("Snapshot Thread") {
                                 public void run() {
                                     try {
+                                        LOG.info("Fuck start to snap");
                                         zks.takeSnapshot();
                                     } catch (Exception e) {
                                         LOG.warn("Unexpected exception", e);

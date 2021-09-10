@@ -637,6 +637,7 @@ public class ZKDatabase {
      */
     public boolean append(Request si) throws IOException {
         txnCount.incrementAndGet();
+        LOG.info("fuck_append_Request. txnCount:{}", txnCount);
         return this.snapLog.append(si);
     }
 
