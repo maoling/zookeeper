@@ -152,6 +152,8 @@ public abstract class KeeperException extends Exception {
             return new QuotaExceededException();
         case THROTTLEDOP:
             return new ThrottledOpException();
+        case MEMORYDBSIZEEXCEEDED:
+             return new MemoryDBSizeExceededException();
         case OK:
         default:
             throw new IllegalArgumentException("Invalid exception code:" + code.code);
@@ -412,6 +414,9 @@ public abstract class KeeperException extends Exception {
         SESSIONCLOSEDREQUIRESASLAUTH(-124),
         /** Exceeded the quota that was set on the path.*/
         QUOTAEXCEEDED(-125),
+
+        MEMORYDBSIZEEXCEEDED(-126),
+
         /** Operation was throttled and not executed at all. This error code indicates that zookeeper server
          *  is under heavy load and can't process incoming requests at full speed; please retry with back off.
          */
@@ -978,6 +983,16 @@ public abstract class KeeperException extends Exception {
     public static class ThrottledOpException extends KeeperException {
         public ThrottledOpException() {
             super(Code.THROTTLEDOP);
+        }
+    }
+
+    /**
+     * @see Code#MEMORYDBSIZEEXCEEDED
+     */
+    @InterfaceAudience.Public
+    public static class MemoryDBSizeExceededException extends KeeperException {
+        public MemoryDBSizeExceededException() {
+            super(Code.MEMORYDBSIZEEXCEEDED);
         }
     }
 }

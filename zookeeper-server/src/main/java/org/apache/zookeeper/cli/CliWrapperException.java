@@ -19,6 +19,7 @@
 package org.apache.zookeeper.cli;
 
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.KeeperException.MemoryDBSizeExceededException;
 
 @SuppressWarnings("serial")
 public class CliWrapperException extends CliException {
@@ -56,6 +57,8 @@ public class CliWrapperException extends CliException {
                        + "new servers are connected and synced";
             } else if (keeperException instanceof KeeperException.QuotaExceededException) {
                 return "Quota has exceeded : " + keeperException.getPath();
+            } else if (keeperException instanceof MemoryDBSizeExceededException) {
+                return "Memory DB Size has exceeded";
             }
         }
         return cause.getMessage();

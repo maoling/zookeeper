@@ -45,6 +45,7 @@ import org.apache.jute.Record;
 import org.apache.zookeeper.Environment;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.KeeperException.Code;
+import org.apache.zookeeper.KeeperException.MemoryDBSizeExceededException;
 import org.apache.zookeeper.KeeperException.SessionExpiredException;
 import org.apache.zookeeper.Quotas;
 import org.apache.zookeeper.StatsTrack;
@@ -107,6 +108,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     public static final String ENABLE_EAGER_ACL_CHECK = "zookeeper.enableEagerACLCheck";
     public static final String SKIP_ACL = "zookeeper.skipACL";
     public static final String ENFORCE_QUOTA = "zookeeper.enforceQuota";
+    public static final String MAX_MEMORY_DB_KB = "zookeeper.maxMemoryDBInKb";
 
     // When enabled, will check ACL constraints appertained to the requests first,
     // before sending the requests to the quorum.
@@ -115,6 +117,8 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     static final boolean skipACL;
 
     public static final boolean enforceQuota;
+
+    public static final Long maxMemoryDBInKb;
 
     public static final String SASL_SUPER_USER = "zookeeper.superUser";
 
@@ -148,6 +152,8 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         if (enforceQuota) {
             LOG.info("{} = {}, Quota Enforce enables", ENFORCE_QUOTA, enforceQuota);
         }
+
+        maxMemoryDBInKb = Long.getLong(MAX_MEMORY_DB_KB, -1L);
 
         digestEnabled = Boolean.parseBoolean(System.getProperty(ZOOKEEPER_DIGEST_ENABLED, "true"));
         LOG.info("{} = {}", ZOOKEEPER_DIGEST_ENABLED, digestEnabled);
@@ -2144,6 +2150,40 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                     throw new KeeperException.QuotaExceededException(lastPrefix);
                 }
             }
+        }
+    }
+
+    /**
+     TOOD
+     **/
+    public void checkMemoryDBSize(String path, byte[] lastData, byte[] data, int type) throws
+            MemoryDBSizeExceededException {
+        if (maxMemoryDBInKb <= 0) {
+            return;
+        }
+
+        switch (type) {
+            case OpCode.create:
+                checkMemoryDBSize();
+                break;
+            case OpCode.setData:
+                long dataBytes = (data == null) ? 0 : data.length;
+                long bytesDiff = dataBytes - (lastData == null ? 0 : lastData.length);
+                if (bytesDiff > 0) {
+                    checkMemoryDBSize();
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported OpCode for checkMemoryDBSize: " + type);
+        }
+    }
+
+    private void checkMemoryDBSize() throws MemoryDBSizeExceededException {
+        long approximateDataSizeInByte = getZKDatabase().getDataTree().cachedApproximateDataSize();
+        long maxMemoryDBInByte = maxMemoryDBInKb * 1000;
+        if (approximateDataSizeInByte  > maxMemoryDBInByte) {
+            LOG.warn("current MemoryDBInByte {} has exceeded maxMemoryDBInByte {}", approximateDataSizeInByte, maxMemoryDBInByte);
+            throw new MemoryDBSizeExceededException();
         }
     }
 

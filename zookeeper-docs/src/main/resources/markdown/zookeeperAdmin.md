@@ -1208,6 +1208,11 @@ property, when available, is noted below.
 
     The default value is false.
 
+* *maxMemoryDBInKb* :
+    (Java system property: **zookeeper.maxMemoryDBInKb**)
+    **New in 3.8.0:**
+    xxxxxxxx
+    https://etcd.io/docs/v3.4/op-guide/maintenance/
 
 <a name="sc_clusterOptions"></a>
 
