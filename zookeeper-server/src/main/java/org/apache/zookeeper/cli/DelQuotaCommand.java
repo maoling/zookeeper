@@ -75,10 +75,10 @@ public class DelQuotaCommand extends CliCommand {
         // to delete by setting them to 1 as a flag.
         StatsTrack quota = new StatsTrack();
         if (cl.hasOption("n")) {
-            quota.setCount(1);
+            quota.setCount(1L);
         }
         if (cl.hasOption("b")) {
-            quota.setBytes(1);
+            quota.setBytes(1L);
         }
         if (cl.hasOption("N")) {
             quota.setCountHardLimit(1);
@@ -142,10 +142,10 @@ public class DelQuotaCommand extends CliCommand {
             // cut the tree till their is more than one child
             trimProcQuotas(zk, parentPath);
         } else {
-            if (quota.getCount() > 0) {
-                strack.setCount(-1);
+            if (quota.getCount().get() > 0) {
+                strack.setCount(-1L);
             }
-            if (quota.getBytes() > 0) {
+            if (quota.getBytes().get() > 0) {
                 strack.setBytes(-1L);
             }
             if (quota.getCountHardLimit() > 0) {

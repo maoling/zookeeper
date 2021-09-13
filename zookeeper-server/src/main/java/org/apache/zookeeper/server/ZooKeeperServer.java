@@ -2094,8 +2094,8 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             limitStats = new StatsTrack(node.data);
         }
         //check the quota
-        boolean checkCountQuota = countDiff != 0 && (limitStats.getCount() > -1 || limitStats.getCountHardLimit() > -1);
-        boolean checkByteQuota = bytesDiff != 0 && (limitStats.getBytes() > -1 || limitStats.getByteHardLimit() > -1);
+        boolean checkCountQuota = countDiff != 0 && (limitStats.getCount().get() > -1 || limitStats.getCountHardLimit() > -1);
+        boolean checkByteQuota = bytesDiff != 0 && (limitStats.getBytes().get() > -1 || limitStats.getByteHardLimit() > -1);
 
         if (!checkCountQuota && !checkByteQuota) {
             return;
@@ -2117,26 +2117,36 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
 
         //check the Count Quota
         if (checkCountQuota) {
-            long newCount = currentStats.getCount() + countDiff;
             boolean isCountHardLimit = limitStats.getCountHardLimit() > -1;
-            long countLimit = isCountHardLimit ? limitStats.getCountHardLimit() : limitStats.getCount();
-
+            long countLimit = isCountHardLimit ? limitStats.getCountHardLimit() : limitStats.getCount().get();
+//            synchronized (node) {
+//
+//            }
+            long newCount = currentStats.countChecker.addAndGet(countDiff);
+            //currentStats.countChecker.addAndGet(countDiff); // currentStats.getCount().get() is the big problem
+            LOG.info("fuck-pre countChecker:{}, getCount:{}, countDiff:{}, newCount:{}, countLimit:{}, Thread().getName:{}",
+            currentStats.countChecker.get(), currentStats.getCount(), countDiff, newCount,
+            countLimit, Thread.currentThread().getName());
             if (newCount > countLimit) {
+                //LOG.info("fuck-after getCount:{}, countDiff:{}, newCount:{}, countLimit:{}, Thread().getName:{}", currentStats.getCount(), countDiff, newCount, countLimit, Thread.currentThread().getName());
                 String msg = "Quota exceeded: " + lastPrefix + " [current count=" + newCount + ", " + (isCountHardLimit ? "hard" : "soft") + "CountLimit=" + countLimit + "]";
+                currentStats.countChecker.set(countLimit);
                 RATE_LOGGER.rateLimitLog(msg);
                 if (isCountHardLimit) {
                     updateQuotaExceededMetrics(namespace);
                     throw new KeeperException.QuotaExceededException(lastPrefix);
                 }
             }
+            //currentStats.getCount().addAndGet(-countDiff);
         }
 
         //check the Byte Quota
         if (checkByteQuota) {
-            long newBytes = currentStats.getBytes() + bytesDiff;
             boolean isByteHardLimit = limitStats.getByteHardLimit() > -1;
-            long byteLimit = isByteHardLimit ? limitStats.getByteHardLimit() : limitStats.getBytes();
-            if (newBytes > byteLimit) {
+            long byteLimit = isByteHardLimit ? limitStats.getByteHardLimit() : limitStats.getBytes().get();
+
+            if (currentStats.checkBytes(bytesDiff, byteLimit)) {
+                long newBytes = currentStats.getBytes().get() + (bytesDiff);
                 String msg = "Quota exceeded: " + lastPrefix + " [current bytes=" + newBytes + ", " + (isByteHardLimit ? "hard" : "soft") + "ByteLimit=" + byteLimit + "]";
                 RATE_LOGGER.rateLimitLog(msg);
                 if (isByteHardLimit) {

@@ -86,7 +86,7 @@ public class SetQuotaCommand extends CliCommand {
         }
 
         StatsTrack quota = new StatsTrack();
-        quota.setCount(-1);
+        quota.setCount(-1L);
         quota.setBytes(-1L);
         quota.setCountHardLimit(-1);
         quota.setByteHardLimit(-1L);
@@ -117,7 +117,7 @@ public class SetQuotaCommand extends CliCommand {
         try {
             if (cl.hasOption("n")) {
                 // we are setting the num quota
-                int count = Integer.parseInt(cl.getOptionValue("n"));
+                long count = Integer.parseInt(cl.getOptionValue("n"));
                 if (count > 0) {
                     quota.setCount(count);
                 } else {
@@ -237,7 +237,7 @@ public class SetQuotaCommand extends CliCommand {
                     ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 
             StatsTrack stats = new StatsTrack();
-            stats.setCount(0);
+            stats.setCount(0L);
             stats.setBytes(0L);
 
             zk.create(statPath, stats.getStatsBytes(),
@@ -254,11 +254,11 @@ public class SetQuotaCommand extends CliCommand {
             data = zk.getData(quotaPath, false, new Stat());
             StatsTrack quotaStrack = new StatsTrack(data);
 
-            if (quota.getCount() > -1) {
-                quotaStrack.setCount(quota.getCount());
+            if (quota.getCount().get() > -1) {
+                quotaStrack.setCount(quota.getCount().get());
             }
-            if (quota.getBytes() > -1L) {
-                quotaStrack.setBytes(quota.getBytes());
+            if (quota.getBytes().get() > -1L) {
+                quotaStrack.setBytes(quota.getBytes().get());
             }
             if (quota.getCountHardLimit() > -1) {
                 quotaStrack.setCountHardLimit(quota.getCountHardLimit());
@@ -278,12 +278,12 @@ public class SetQuotaCommand extends CliCommand {
     }
 
     private static void checkQuota(StatsTrack quotaStrack, StatsTrack statStrack) {
-        if ((quotaStrack.getCount() > -1 && quotaStrack.getCount() < statStrack.getCount()) || (quotaStrack.getCountHardLimit() > -1
-                && quotaStrack.getCountHardLimit() < statStrack.getCount())) {
+        if ((quotaStrack.getCount().get() > -1 && quotaStrack.getCount().get() < statStrack.getCount().get()) || (quotaStrack.getCountHardLimit() > -1
+                && quotaStrack.getCountHardLimit() < statStrack.getCount().get())) {
             System.out.println("[Warning]: the count quota you create is less than the existing count:" + statStrack.getCount());
         }
-        if ((quotaStrack.getBytes() > -1 && quotaStrack.getBytes() < statStrack.getBytes()) || (quotaStrack.getByteHardLimit() > -1
-                && quotaStrack.getByteHardLimit() < statStrack.getBytes())) {
+        if ((quotaStrack.getBytes().get() > -1 && quotaStrack.getBytes().get() < statStrack.getBytes().get()) || (quotaStrack.getByteHardLimit() > -1
+                && quotaStrack.getByteHardLimit() < statStrack.getBytes().get())) {
             System.out.println("[Warning]: the bytes quota you create is less than the existing bytes:" + statStrack.getBytes());
         }
     }

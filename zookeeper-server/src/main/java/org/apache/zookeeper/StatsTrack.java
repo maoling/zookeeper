@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 import org.apache.zookeeper.common.StringUtils;
 
@@ -38,7 +40,9 @@ public class StatsTrack {
     private static final String byteStr = "bytes";
     private static final String byteHardLimitStr = "byteHardLimit";
 
-    private final Map<String, Long> stats = new HashMap<>();
+    public static final AtomicLong countChecker = new AtomicLong(1);
+
+    private final Map<String, AtomicLong> stats = new ConcurrentHashMap<>();
     private static final Pattern PAIRS_SEPARATOR = Pattern.compile("[,;]+");
 
     /**
@@ -71,7 +75,8 @@ public class StatsTrack {
         String[] keyValuePairs = PAIRS_SEPARATOR.split(stat);
         for (String keyValuePair : keyValuePairs) {
             String[] kv = keyValuePair.split("=");
-            this.stats.put(kv[0], Long.parseLong(StringUtils.isEmpty(kv[1]) ? "-1" : kv[1]));
+            long value = Long.parseLong(StringUtils.isEmpty(kv[1]) ? "-1" : kv[1]);
+            this.stats.put(kv[0], new AtomicLong(value));
         }
     }
 
@@ -81,8 +86,12 @@ public class StatsTrack {
      *
      * @return the count as part of this string
      */
-    public long getCount() {
+    public AtomicLong getCount() {
         return getValue(countStr);
+    }
+
+    public boolean checkCount(Long delta, Long limitVal) {
+        return checkValue(countStr, delta, limitVal);
     }
 
     /**
@@ -91,7 +100,7 @@ public class StatsTrack {
      * @param count
      *            the count to set with
      */
-    public void setCount(long count) {
+    public void setCount(Long count) {
         setValue(countStr, count);
     }
 
@@ -101,7 +110,7 @@ public class StatsTrack {
      * @return the count as part of this string
      */
     public long getCountHardLimit() {
-        return getValue(countHardLimitStr);
+        return getValue(countHardLimitStr).get();
     }
 
     /**
@@ -118,8 +127,12 @@ public class StatsTrack {
      *
      * @return the bytes as part of this string
      */
-    public long getBytes() {
+    public AtomicLong getBytes() {
         return getValue(byteStr);
+    }
+
+    public boolean checkBytes(Long delta, Long limitVal) {
+        return checkValue(byteStr, delta, limitVal);
     }
 
     /**
@@ -128,7 +141,7 @@ public class StatsTrack {
      * @param bytes
      *            the bytes to set with
      */
-    public void setBytes(long bytes) {
+    public void setBytes(Long bytes) {
         setValue(byteStr, bytes);
     }
 
@@ -138,7 +151,7 @@ public class StatsTrack {
      * @return the bytes as part of this string
      */
     public long getByteHardLimit() {
-        return getValue(byteHardLimitStr);
+        return getValue(byteHardLimitStr).get();
     }
 
     /**
@@ -156,9 +169,10 @@ public class StatsTrack {
      * @param key the key to lookup
      * @return key's value or -1 if it doesn't exist
      */
-    private long getValue(String key) {
-        Long val = this.stats.get(key);
-        return val == null ? -1 : val.longValue();
+    private AtomicLong getValue(String key) {
+        return this.stats.computeIfAbsent(key, k -> new AtomicLong(0L));
+        //AtomicLong val = this.stats.get(key);
+        //return val == null ? new AtomicLong(-1) : val;
     }
 
     /**
@@ -167,8 +181,18 @@ public class StatsTrack {
      * @param key   the key to set
      * @param value the value to set
      */
-    private void setValue(String key, long value) {
-        this.stats.put(key, value);
+    private void setValue(String key, Long value) {
+        this.stats.computeIfAbsent(key, k -> new AtomicLong(0L)).addAndGet(value);
+        //AtomicLong val = this.stats.get(key);
+//        if (val != null) {
+//            val.set(value);
+//        }
+        //this.stats.put(key, new AtomicLong(value));
+    }
+
+    private boolean checkValue(String key, Long delta, Long limitVal) {
+        AtomicLong val = (this.stats.get(key) == null) ? new AtomicLong(-1) : this.stats.get(key);
+        return val.get() + delta > limitVal;
     }
 
     /*

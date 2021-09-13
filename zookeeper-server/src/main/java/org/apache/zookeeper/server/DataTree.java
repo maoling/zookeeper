@@ -381,7 +381,7 @@ public class DataTree {
      * @param countDiff
      *            the diff to be added to the count
      */
-    public void updateQuotaStat(String lastPrefix, long bytesDiff, int countDiff) {
+    public void updateQuotaStat(String lastPrefix, long bytesDiff, long countDiff) {
 
         String statNodePath = Quotas.statPath(lastPrefix);
         DataNode statNode = nodes.get(statNodePath);
@@ -394,8 +394,8 @@ public class DataTree {
         }
         synchronized (statNode) {
             updatedStat = new StatsTrack(statNode.data);
-            updatedStat.setCount(updatedStat.getCount() + countDiff);
-            updatedStat.setBytes(updatedStat.getBytes() + bytesDiff);
+            updatedStat.setCount(countDiff);
+            updatedStat.setBytes(bytesDiff);
 
             statNode.data = updatedStat.getStatsBytes();
         }
@@ -1187,7 +1187,7 @@ public class DataTree {
     private static class Counts {
 
         long bytes;
-        int count;
+        long count;
 
     }
 

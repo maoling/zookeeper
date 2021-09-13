@@ -277,9 +277,9 @@ public class QuotaMetricsUtilsTest extends ZKTestCase {
 
         // create the ancestor and child data nodes
         buildAncestors(path, dataTree);
-        int childCount = (int) usageTrack.getCount() - 1; // the node count always includes the top namespace itself
+        int childCount = (int) usageTrack.getCount().get() - 1; // the node count always includes the top namespace itself
         if (childCount > 0) {
-            int dataBytes = (int) usageTrack.getBytes() / childCount;
+            int dataBytes = (int) usageTrack.getBytes().get() / childCount;
             for (int i = 0; i < childCount; i++) {
                 dataTree.createNode(path + "/n_" + i, new byte[dataBytes], null, -1, 1, 1, 1);
             }

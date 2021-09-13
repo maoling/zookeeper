@@ -106,7 +106,7 @@ public class StatsTrackTest {
     @Test
     public void testBackwardCompatibility() {
         StatsTrack quota = new StatsTrack();
-        quota.setCount(4);
+        quota.setCount(4L);
         quota.setCountHardLimit(4);
         quota.setBytes(9L);
         quota.setByteHardLimit(15L);

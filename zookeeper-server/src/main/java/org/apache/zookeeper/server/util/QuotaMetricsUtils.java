@@ -139,16 +139,16 @@ public final class QuotaMetricsUtils {
         final StatsTrack statsTrack = new StatsTrack(data);
         switch (type) {
             case QUOTA_COUNT_LIMIT:
-                aggregateQuotaLimitOrUsage(namespace, metricsMap, getQuotaLimit(statsTrack.getCountHardLimit(), statsTrack.getCount()));
+                aggregateQuotaLimitOrUsage(namespace, metricsMap, getQuotaLimit(statsTrack.getCountHardLimit(), statsTrack.getCount().get()));
                 break;
             case QUOTA_BYTES_LIMIT:
-                aggregateQuotaLimitOrUsage(namespace, metricsMap, getQuotaLimit(statsTrack.getByteHardLimit(), statsTrack.getBytes()));
+                aggregateQuotaLimitOrUsage(namespace, metricsMap, getQuotaLimit(statsTrack.getByteHardLimit(), statsTrack.getBytes().get()));
                 break;
             case QUOTA_COUNT_USAGE:
-                aggregateQuotaLimitOrUsage(namespace, metricsMap, statsTrack.getCount());
+                aggregateQuotaLimitOrUsage(namespace, metricsMap, statsTrack.getCount().get());
                 break;
             case QUOTA_BYTES_USAGE:
-                aggregateQuotaLimitOrUsage(namespace, metricsMap, statsTrack.getBytes());
+                aggregateQuotaLimitOrUsage(namespace, metricsMap, statsTrack.getBytes().get());
                 break;
             default:
         }

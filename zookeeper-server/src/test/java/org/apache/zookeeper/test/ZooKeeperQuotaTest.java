@@ -84,7 +84,7 @@ public class ZooKeeperQuotaTest extends ClientBase {
         zk.create("/a/b/v/d", "some".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 
         StatsTrack quota = new StatsTrack();
-        quota.setCount(4);
+        quota.setCount(4L);
         quota.setCountHardLimit(4);
         quota.setBytes(9L);
         quota.setByteHardLimit(15L);
@@ -94,9 +94,9 @@ public class ZooKeeperQuotaTest extends ClientBase {
         String absolutePath = Quotas.limitPath(path);
         byte[] data = zk.getData(absolutePath, false, new Stat());
         StatsTrack st = new StatsTrack(data);
-        assertTrue(st.getBytes() == 9L, "bytes are set");
+        assertTrue(st.getBytes().get() == 9L, "bytes are set");
         assertTrue(st.getByteHardLimit() == 15L, "byte hard limit is set");
-        assertTrue(st.getCount() == 4, "num count is set");
+        assertTrue(st.getCount().get() == 4, "num count is set");
         assertTrue(st.getCountHardLimit() == 4, "count hard limit is set");
 
         // check quota node readable by old servers
@@ -107,8 +107,8 @@ public class ZooKeeperQuotaTest extends ClientBase {
         String statPath = Quotas.statPath(path);
         byte[] qdata = zk.getData(statPath, false, new Stat());
         StatsTrack qst = new StatsTrack(qdata);
-        assertTrue(qst.getBytes() == 8L, "bytes are set");
-        assertTrue(qst.getCount() == 2, "count is set");
+        assertTrue(qst.getBytes().get() == 8L, "bytes are set");
+        assertTrue(qst.getCount().get() == 2, "count is set");
 
         //force server to restart and load from snapshot, not txn log
         stopServer();
@@ -126,7 +126,7 @@ public class ZooKeeperQuotaTest extends ClientBase {
         String nodeData = "foo";
         zk.create(path, nodeData.getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 
-        int count = 10;
+        long count = 10L;
         long bytes = 5L;
         StatsTrack quota = new StatsTrack();
         quota.setCount(count);
@@ -170,8 +170,8 @@ public class ZooKeeperQuotaTest extends ClientBase {
 
         //set the quota on the path:/c1/c2/c3
         StatsTrack quota = new StatsTrack();
-        quota.setCount(5);
-        quota.setBytes(10);
+        quota.setCount(5L);
+        quota.setBytes(10L);
         SetQuotaCommand.createQuota(zk, "/c1/c2/c3", quota);
 
         try {
@@ -325,7 +325,7 @@ public class ZooKeeperQuotaTest extends ClientBase {
         zk.create(path, "data".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
         int count = 2;
         StatsTrack st = new StatsTrack();
-        st.setCount(count);
+        st.setCount((long)count);
         SetQuotaCommand.createQuota(zk, path, st);
         zk.create(path + "/c2", "data".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 
@@ -536,7 +536,7 @@ public class ZooKeeperQuotaTest extends ClientBase {
         zk.create(path, "12345".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
         StatsTrack st = new StatsTrack();
         long bytes = 5L;
-        int count = 10;
+        long count = 10L;
         long byteHardLimit = 6L;
         int countHardLimit = 12;
         st.setBytes(bytes);
@@ -563,9 +563,9 @@ public class ZooKeeperQuotaTest extends ClientBase {
         //delete the Byte Hard Quota
         st = new StatsTrack();
         st.setByteHardLimit(1);
-        st.setBytes(1);
+        st.setBytes(1L);
         st.setCountHardLimit(1);
-        st.setCount(1);
+        st.setCount(1L);
         DelQuotaCommand.delQuota(zk, path, st);
 
         statsTracks = ListQuotaCommand.listQuota(zk, path);
