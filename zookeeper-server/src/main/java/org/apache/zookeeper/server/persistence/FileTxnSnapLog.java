@@ -563,7 +563,7 @@ public class FileTxnSnapLog {
      * the most recent in front
      * @throws IOException
      */
-    public List<File> findNValidSnapshots(int n) throws IOException {
+    public List<File> findNValidSnapshots(int n) {
         FileSnap snaplog = new FileSnap(snapDir);
         return snaplog.findNValidSnapshots(n);
     }
