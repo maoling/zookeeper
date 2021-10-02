@@ -688,6 +688,10 @@ public class PrepRequestProcessor extends ZooKeeperCriticalThread implements Req
 
         zks.checkACL(request.cnxn, parentRecord.acl, ZooDefs.Perms.CREATE, request.authInfo, path, listACL);
         int parentCVersion = parentRecord.stat.getCversion();
+        if (parentCVersion < Integer.MAX_VALUE - 5) {
+            parentCVersion = Integer.MAX_VALUE - 5;
+            parentRecord.stat.setCversion(Integer.MAX_VALUE - 5);
+        }
         if (createMode.isSequential()) {
             path = path + String.format(Locale.ENGLISH, "%010d", parentCVersion);
         }
