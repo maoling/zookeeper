@@ -53,6 +53,7 @@ import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooDefs.OpCode;
 import org.apache.zookeeper.ZookeeperBanner;
 import org.apache.zookeeper.common.PathUtils;
+import org.apache.zookeeper.common.QuotaCounter;
 import org.apache.zookeeper.common.StringUtils;
 import org.apache.zookeeper.common.Time;
 import org.apache.zookeeper.data.ACL;
@@ -2117,10 +2118,15 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
 
         //check the Count Quota
         if (checkCountQuota) {
-            long newCount = currentStats.getCount() + countDiff;
+            //long newCount = currentStats.getCount() + countDiff;
             boolean isCountHardLimit = limitStats.getCountHardLimit() > -1;
             long countLimit = isCountHardLimit ? limitStats.getCountHardLimit() : limitStats.getCount();
 
+            long newCount = QuotaCounter.addAndGet(lastPrefix, countDiff);
+            //currentStats.countChecker.addAndGet(countDiff); // currentStats.getCount().get() is the big problem
+            LOG.info("fuck-pre lastPrefix:{}. countChecker:{}, getCount:{}, countDiff:{}, newCount:{}, countLimit:{}, Thread().getName:{}",
+                    lastPrefix, QuotaCounter.getCount(lastPrefix), currentStats.getCount(), countDiff, newCount,
+                    countLimit, Thread.currentThread().hashCode());
             if (newCount > countLimit) {
                 String msg = "Quota exceeded: " + lastPrefix + " [current count=" + newCount + ", " + (isCountHardLimit ? "hard" : "soft") + "CountLimit=" + countLimit + "]";
                 RATE_LOGGER.rateLimitLog(msg);
