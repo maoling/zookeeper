@@ -2128,6 +2128,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                     lastPrefix, QuotaCounter.getCount(lastPrefix), currentStats.getCount(), countDiff, newCount,
                     countLimit, Thread.currentThread().hashCode());
             if (newCount > countLimit) {
+                QuotaCounter.addAndGet(lastPrefix, -countDiff);
                 String msg = "Quota exceeded: " + lastPrefix + " [current count=" + newCount + ", " + (isCountHardLimit ? "hard" : "soft") + "CountLimit=" + countLimit + "]";
                 RATE_LOGGER.rateLimitLog(msg);
                 if (isCountHardLimit) {

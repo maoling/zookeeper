@@ -524,6 +524,7 @@ public class DataTree {
         long bytes = data == null ? 0 : data.length;
         // also check to update the quotas for this node
         if (lastPrefix != null) {    // ok we have some match and need to update
+            // NOTE:
             updateQuotaStat(lastPrefix, bytes, 1);
         }
         updateWriteStat(path, bytes);

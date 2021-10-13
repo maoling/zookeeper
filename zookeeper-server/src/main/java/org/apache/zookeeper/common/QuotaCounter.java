@@ -31,7 +31,7 @@
  public class QuotaCounter {
 
      /** Logger for this class */
-     private static final Logger LOG = LoggerFactory.getLogger(QuotaCounter.class);
+     //private static final Logger LOG = LoggerFactory.getLogger(QuotaCounter.class);
 
      private static final ConcurrentHashMap<String, Counter> stats = new ConcurrentHashMap<>();
 
@@ -53,16 +53,22 @@
          }
      }
 
+     /**
+     * setQ 将当前stat设置进去，setmap中的key
+     * listQ 无影响
+     * delQ 正常删除，同时删除map中的key
+     *
+     * */
      public static long addAndGet(String key, long count) {
          return stats.computeIfAbsent(key, k ->
-             new Counter(new AtomicLong(0L), new AtomicLong(0L)))
+             new Counter(new AtomicLong(0L), new AtomicLong(1L)))
              .getCount()
              .addAndGet(count);
      }
 
      public static long getCount(String key) {
          return stats.computeIfAbsent(key, k ->
-                 new Counter(new AtomicLong(0L), new AtomicLong(0L)))
+                 new Counter(new AtomicLong(0L), new AtomicLong(1L)))
                  .getCount()
                  .get();
      }
