@@ -81,7 +81,8 @@ import java.io.IOException;
 
                 // My node name
                 try {
-                    name = new String(InetAddress.getLocalHost().getCanonicalHostName().toString());
+                    name = new String(InetAddress.getLocalHost().getCanonicalHostName().toString()
+                    + System.nanoTime());
                 } catch (UnknownHostException e) {
                     System.out.println(e.toString());
                 }
@@ -98,7 +99,7 @@ import java.io.IOException;
 
             boolean enter() throws KeeperException, InterruptedException{
                 zk.create(root + "/" + name, new byte[0], Ids.OPEN_ACL_UNSAFE,
-                        CreateMode.EPHEMERAL_SEQUENTIAL);
+                        CreateMode.EPHEMERAL);
                 while (true) {
                     synchronized (mutex) {
                         List<String> list = zk.getChildren(root, true);
