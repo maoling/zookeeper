@@ -126,6 +126,7 @@ public class Follower extends Learner {
                 }
             } catch (Exception e) {
                 LOG.warn("Exception when following the leader", e);
+                LOG.info("fuck_I_am_Follower_start to closeSocket");
                 closeSocket();
 
                 // clear pending revalidations

@@ -712,6 +712,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             createSessionTracker();
         }
         startSessionTracker();
+        LOG.info("fuck_ZooKeeperServer_setupRequestProcessors");
         setupRequestProcessors();
 
         startRequestThrottler();

@@ -898,6 +898,7 @@ public class Learner {
             if (sock != null) {
                 sock.close();
                 sock = null;
+                LOG.info("fuck_Learner_closeSockSync_sock set to null");
             }
             ServerMetrics.getMetrics().SOCKET_CLOSING_TIME.add(Time.currentElapsedTime() - startTime);
         } catch (IOException e) {
