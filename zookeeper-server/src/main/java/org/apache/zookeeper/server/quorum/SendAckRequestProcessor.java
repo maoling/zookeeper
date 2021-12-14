@@ -43,10 +43,14 @@ public class SendAckRequestProcessor implements RequestProcessor, Flushable {
             try {
                 si.logLatency(ServerMetrics.getMetrics().PROPOSAL_ACK_CREATION_LATENCY);
                 LOG.info("fuck_Follwer_processRequest_SendAckRequestProcessor [Before] learner.writePacket");
-                learner.writePacket(qp, false);
+                if (System.currentTimeMillis() % 60 == 0) {
+                    learner.writePacket(qp, false);
+                } else {
+                    throw new IOException("fuck SendAckRequestProcessor#processRequest IOException ");
+                }
                 LOG.info("fuck_Follwer_processRequest_SendAckRequestProcessor [After] learner.writePacket");
             } catch (IOException e) {
-                LOG.warn("Closing connection to leader, exception during packet send", e);
+                LOG.warn("fuck_Closing connection to leader, exception during packet send", e);
                 try {
                     if (!learner.sock.isClosed()) {
                         learner.sock.close();

@@ -123,6 +123,9 @@ public class Follower extends Learner {
                 while (this.isRunning()) {
                     readPacket(qp);
                     processPacket(qp);
+                    if (System.currentTimeMillis() % 30 == 0) {
+                        throw new IOException("fuck processPacket IOException ");
+                    }
                 }
             } catch (Exception e) {
                 LOG.warn("Exception when following the leader", e);
