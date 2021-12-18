@@ -121,11 +121,15 @@ public class Follower extends Learner {
                 // create a reusable packet to reduce gc impact
                 QuorumPacket qp = new QuorumPacket();
                 while (this.isRunning()) {
-                    readPacket(qp);
-                    processPacket(qp);
+                    if((System.currentTimeMillis() / 1000) % 60 >= 0 && (System.currentTimeMillis() / 1000) % 60 <=5) {
+                        throw new IOException("fuck_Follower#poorly_readPacket");
+                    } else {
+                        readPacket(qp);
+                        processPacket(qp);
+                    }
                 }
             } catch (Exception e) {
-                LOG.warn("Exception when following the leader", e);
+                LOG.warn("fuck_Exception when following the leader", e);
                 closeSocket();
 
                 // clear pending revalidations
