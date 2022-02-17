@@ -18,7 +18,7 @@
 
 package org.apache.zookeeper.server.quorum;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Arrays;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.PortAssignment;
@@ -26,34 +26,48 @@ import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.ZooKeeper.States;
 import org.apache.zookeeper.test.ClientBase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class QuorumPeerReadOnlyTest extends QuorumPeerTestBase {
 
-    String prePropertyReadOnlyValue = null;
+    static String prePropertyReadOnlyValue = null;
+    private static final Logger LOG = LoggerFactory.getLogger(LearnerSyncThrottlerTest.class);
 
-    @Before
-    public void setReadOnlySystemProperty() {
+    @BeforeAll
+    public static void setReadOnlySystemProperty() {
         prePropertyReadOnlyValue = System.getProperty("readonlymode.enabled");
         System.setProperty("readonlymode.enabled", "true");
+        LOG.info("fuck_@BeforeAll");
     }
 
-    @After
-    public void restoreReadOnlySystemProperty() {
+    @AfterAll
+    public static void restoreReadOnlySystemProperty() {
         if (prePropertyReadOnlyValue == null) {
             System.clearProperty("readonlymode.enabled");
         } else {
             System.setProperty("readonlymode.enabled", prePropertyReadOnlyValue);
         }
+        LOG.info("fuck_@AfterAll");
+    }
+
+    @Test
+    public void testSimply() {
+        int res = 3;
+        assertTrue(res == 3);
     }
 
     /**
      * Test zxid is not set to a truncate value
      */
     @Test
+    @Timeout(value = 60)
     public void testReadOnlyZxid() throws Exception {
+        LOG.info("fuck_@testReadOnlyZxid");
         ClientBase.setupTestEnv();
         final int SERVER_COUNT = 3;
         final int WRITE_COUNT = 3;
@@ -99,18 +113,19 @@ public class QuorumPeerReadOnlyTest extends QuorumPeerTestBase {
 
         mt[SERVER_COUNT - 1].start();
         // Ensure that close will trigger a timeout
-        zk[SERVER_COUNT - 1] = new ZooKeeper("127.0.0.1:" + clientPorts[SERVER_COUNT - 1], ClientBase.CONNECTION_TIMEOUT, this, true) {
-            @Override
-            public void close() {
-                getTestable().injectSessionExpiration();
-                cnxn.disconnect();
-                try {
-                    Thread.sleep(ClientBase.CONNECTION_TIMEOUT * 2);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
+        zk[SERVER_COUNT - 1] =
+                new ZooKeeper("127.0.0.1:" + clientPorts[SERVER_COUNT - 1], ClientBase.CONNECTION_TIMEOUT, this, true) {
+                    @Override
+                    public void close() {
+                        getTestable().injectSessionExpiration();
+                        cnxn.disconnect();
+                        try {
+                            Thread.sleep(ClientBase.CONNECTION_TIMEOUT * 2);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
 
         waitForAll(new ZooKeeper[] {zk[SERVER_COUNT - 1]}, States.CONNECTEDREADONLY);
 
@@ -173,7 +188,7 @@ public class QuorumPeerReadOnlyTest extends QuorumPeerTestBase {
             if (searchCount++ >= 300) {
                 throw new RuntimeException("Waiting too long");
             }
-        } while(!leaderFound);
+        } while (!leaderFound);
     }
 
     private void ensureRemainingserversPresent(MainThread[] mt) throws InterruptedException {
@@ -191,6 +206,6 @@ public class QuorumPeerReadOnlyTest extends QuorumPeerTestBase {
             if (searchCount++ >= 300) {
                 throw new RuntimeException("Waiting too long");
             }
-        } while(missingConnection);
+        } while (missingConnection);
     }
 }
