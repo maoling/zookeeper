@@ -150,7 +150,8 @@ public class NodeViewerMetaData extends ZooInspectorNodeViewer {
                         if(entry.getKey().equals("Ephemeral Owner")){
                             String hexSession="0x";
                             try{
-                                hexSession = String.format("0x%x", Long.parseLong(entry.getValue()));
+                                hexSession += Long.toHexString(Long.parseLong(entry.getValue()));
+                                //= String.format("0x%x", Long.parseLong(entry.getValue()));
                             }catch (NumberFormatException e){
                                 LoggerFactory.getLogger().warn("parse {} to hex fail",entry.getValue(),e);
                             }
