@@ -415,6 +415,7 @@ public abstract class KeeperException extends Exception {
         /** Exceeded the quota that was set on the path.*/
         QUOTAEXCEEDED(-125),
 
+        /** TODO.*/
         MEMORYDBSIZEEXCEEDED(-126),
 
         /** Operation was throttled and not executed at all. This error code indicates that zookeeper server

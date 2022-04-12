@@ -154,6 +154,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
 
         maxMemoryDBInKb = Long.getLong(MAX_MEMORY_DB_KB, -1L);
+        LOG.info("{} = {}", MAX_MEMORY_DB_KB, maxMemoryDBInKb);
 
         digestEnabled = Boolean.parseBoolean(System.getProperty(ZOOKEEPER_DIGEST_ENABLED, "true"));
         LOG.info("{} = {}", ZOOKEEPER_DIGEST_ENABLED, digestEnabled);
@@ -2180,7 +2181,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
 
     private void checkMemoryDBSize() throws MemoryDBSizeExceededException {
         long approximateDataSizeInByte = getZKDatabase().getDataTree().cachedApproximateDataSize();
-        long maxMemoryDBInByte = maxMemoryDBInKb * 1000;
+        long maxMemoryDBInByte = maxMemoryDBInKb * 1024;
         if (approximateDataSizeInByte  > maxMemoryDBInByte) {
             LOG.warn("current MemoryDBInByte {} has exceeded maxMemoryDBInByte {}", approximateDataSizeInByte, maxMemoryDBInByte);
             throw new MemoryDBSizeExceededException();
