@@ -1103,6 +1103,8 @@ public class DataTree {
              * with the file.
              */
             if (rc.zxid > lastProcessedZxid) {
+                System.out.println("fuck_rc.zxid > lastProcessedZxid rc.zxid:"
+                +rc.zxid+",lastProcessedZxid:"+lastProcessedZxid + ",rc.type:" + rc.type);
                 lastProcessedZxid = rc.zxid;
             }
 

@@ -79,6 +79,7 @@ import org.apache.zookeeper.server.SessionTracker.SessionExpirer;
 import org.apache.zookeeper.server.auth.ProviderRegistry;
 import org.apache.zookeeper.server.auth.ServerAuthenticationProvider;
 import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
+import org.apache.zookeeper.server.quorum.LeaderZooKeeperServer;
 import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
 import org.apache.zookeeper.server.quorum.ReadOnlyZooKeeperServer;
 import org.apache.zookeeper.server.util.JvmPauseMonitor;
@@ -1849,6 +1850,14 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         if (hdr == null) {
             return new ProcessTxnResult();
         } else {
+            try {
+                if (this instanceof LeaderZooKeeperServer && hdr.getType() == OpCode.create2) {
+                    Thread.sleep(2);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("fuck_who_ami:" + this);
             return getZKDatabase().processTxn(hdr, txn, digest);
         }
     }

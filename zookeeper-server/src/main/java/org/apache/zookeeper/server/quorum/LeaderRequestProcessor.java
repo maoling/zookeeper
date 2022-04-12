@@ -48,8 +48,10 @@ public class LeaderRequestProcessor implements RequestProcessor {
     public void processRequest(Request request) throws RequestProcessorException {
         // Screen quorum requests against ACLs first
         if (!lzks.authWriteRequest(request)) {
+            System.out.println("fuck_LeaderRequestProcessor_zks.authWriteRequest false");
             return;
         }
+        System.out.println("fuck_LeaderRequestProcessor_zks.authWriteRequest true");
 
         // Check if this is a local session and we are trying to create
         // an ephemeral node, in which case we upgrade the session

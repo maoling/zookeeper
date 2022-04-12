@@ -141,8 +141,10 @@ public class EagerACLFilterTest extends QuorumBase {
                 "Connecting: %s Checking: %s EagerACL: %s Operation: %s",
                 zkConnected.getPeerState(), peer.getPeerState(), eagerACL, operation);
         if (eagerACL) {
+            System.out.println("fuck_assertEquals lastxid:"+lastxid+",peer.getLastLoggedZxid():"+peer.getLastLoggedZxid());
             assertEquals(lastxid, peer.getLastLoggedZxid(), assertion);
         } else {
+            System.out.println("fuck_assertNotEquals lastxid:"+lastxid+",peer.getLastLoggedZxid():"+peer.getLastLoggedZxid());
             assertNotEquals(lastxid, peer.getLastLoggedZxid(), assertion);
         }
     }
@@ -248,6 +250,7 @@ public class EagerACLFilterTest extends QuorumBase {
         zkClient.create(PARENT_PATH, null, Ids.CREATOR_ALL_ACL, CreateMode.PERSISTENT, null);
         long lastxid = zkConnected.getLastLoggedZxid();
         try {
+            System.out.println("fuck_expect no auth_setData");
             zkClientB.setData(PARENT_PATH, DATA, -1);
             fail("expect no auth");
         } catch (KeeperException.NoAuthException e) {

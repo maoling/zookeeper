@@ -77,8 +77,10 @@ public class ObserverRequestProcessor extends ZooKeeperCriticalThread implements
 
                 // Screen quorum requests against ACLs first
                 if (!zks.authWriteRequest(request)) {
+                    System.out.println("fuck_ObserverRequestProcessor_zks.authWriteRequest false");
                     continue;
                 }
+                System.out.println("fuck_ObserverRequestProcessor_zks.authWriteRequest true");
 
                 // We want to queue the request to be processed before we submit
                 // the request to the leader so that we are ready to receive
