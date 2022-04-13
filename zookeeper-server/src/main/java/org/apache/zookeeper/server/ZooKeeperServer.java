@@ -2176,7 +2176,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     }
 
     private void checkMemoryDBSize(String path, long bytesDiff) throws MemoryDBSizeExceededException {
-        long approximateDataSizeInByte = getZKDatabase().getDataTree().cachedApproximateDataSize() + + bytesDiff;
+        long approximateDataSizeInByte = getZKDatabase().getDataTree().cachedApproximateDataSize() + bytesDiff;
         long maxMemoryDBInByte = maxMemoryDBInKb * 1024;
         if (approximateDataSizeInByte > maxMemoryDBInByte) {
             LOG.warn("current MemoryDBInByte:{} has exceeded maxMemoryDBInByte:{} for path:{}", approximateDataSizeInByte, maxMemoryDBInByte, path);
