@@ -308,6 +308,7 @@ public class PrometheusMetricsProvider implements MetricsProvider {
         public Summary getSummary(String name, DetailLevel detailLevel) {
             if (detailLevel == DetailLevel.BASIC) {
                 return basicSummaries.computeIfAbsent(name, (n) -> {
+                    System.out.println("fuck_PrometheusMetricsProvider_first_init name:" + name);
                     if (summaries.containsKey(n)) {
                         throw new IllegalArgumentException("Already registered a non basic summary as " + n);
                     }

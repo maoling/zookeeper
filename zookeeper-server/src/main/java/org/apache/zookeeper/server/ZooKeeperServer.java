@@ -2162,28 +2162,24 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         if (maxMemoryDBInKb <= 0) {
             return;
         }
+        long dataBytes = (data == null) ? 0 : data.length;
+        long bytesDiff = dataBytes - (lastData == null ? 0 : lastData.length);
 
         switch (type) {
             case OpCode.create:
-                checkMemoryDBSize();
-                break;
             case OpCode.setData:
-                long dataBytes = (data == null) ? 0 : data.length;
-                long bytesDiff = dataBytes - (lastData == null ? 0 : lastData.length);
-                if (bytesDiff > 0) {
-                    checkMemoryDBSize();
-                }
+                checkMemoryDBSize(path, bytesDiff);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported OpCode for checkMemoryDBSize: " + type);
         }
     }
 
-    private void checkMemoryDBSize() throws MemoryDBSizeExceededException {
-        long approximateDataSizeInByte = getZKDatabase().getDataTree().cachedApproximateDataSize();
+    private void checkMemoryDBSize(String path, long bytesDiff) throws MemoryDBSizeExceededException {
+        long approximateDataSizeInByte = getZKDatabase().getDataTree().cachedApproximateDataSize() + + bytesDiff;
         long maxMemoryDBInByte = maxMemoryDBInKb * 1024;
-        if (approximateDataSizeInByte  > maxMemoryDBInByte) {
-            LOG.warn("current MemoryDBInByte {} has exceeded maxMemoryDBInByte {}", approximateDataSizeInByte, maxMemoryDBInByte);
+        if (approximateDataSizeInByte > maxMemoryDBInByte) {
+            LOG.warn("current MemoryDBInByte:{} has exceeded maxMemoryDBInByte:{} for path:{}", approximateDataSizeInByte, maxMemoryDBInByte, path);
             throw new MemoryDBSizeExceededException();
         }
     }
