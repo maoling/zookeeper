@@ -599,6 +599,7 @@ public class DataTree {
             // delete the node in the trie.
             // we need to update the trie as well
             pTrie.deletePath(Quotas.trimQuotaPath(parentName));
+            // TODO
         }
 
         // also check to update the quotas for this node
@@ -1242,6 +1243,7 @@ public class DataTree {
         synchronized (node) {
             nodes.preChange(statPath, node);
             node.data = strack.getStatsBytes();
+            // TODO
             nodes.postChange(statPath, node);
         }
     }

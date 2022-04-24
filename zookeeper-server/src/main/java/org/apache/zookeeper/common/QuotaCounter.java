@@ -26,7 +26,7 @@
  import org.slf4j.LoggerFactory;
 
  /**
-  * A class that
+  * A class that TODO
   */
  public class QuotaCounter {
 
@@ -34,24 +34,6 @@
      //private static final Logger LOG = LoggerFactory.getLogger(QuotaCounter.class);
 
      private static final ConcurrentHashMap<String, Counter> stats = new ConcurrentHashMap<>();
-
-     static class Counter {
-         private AtomicLong bytes;
-         private AtomicLong count;
-
-         public AtomicLong getBytes() {
-             return bytes;
-         }
-
-         public Counter(AtomicLong bytes, AtomicLong count) {
-             this.bytes = bytes;
-             this.count = count;
-         }
-
-         public AtomicLong getCount() {
-             return count;
-         }
-     }
 
      /**
      * setQ 将当前stat设置进去，setmap中的key
@@ -71,5 +53,27 @@
                  new Counter(new AtomicLong(0L), new AtomicLong(1L)))
                  .getCount()
                  .get();
+     }
+
+     public static Counter delete(String key) {
+         return stats.remove(key);
+     }
+
+     static class Counter {
+         private AtomicLong bytes;
+         private AtomicLong count;
+
+         public Counter(AtomicLong bytes, AtomicLong count) {
+             this.bytes = bytes;
+             this.count = count;
+         }
+
+         public AtomicLong getBytes() {
+             return bytes;
+         }
+
+         public AtomicLong getCount() {
+             return count;
+         }
      }
  }
