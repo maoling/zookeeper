@@ -19,24 +19,218 @@
 package org.apache.zookeeper.server.quorum;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.Op;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.ZooKeeper.States;
+import org.apache.zookeeper.test.ClientBase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A series of unit tests to check the consistency semantics for ZooKeeper
  */
 public class ConsistencyTest extends QuorumPeerTestBase {
+    protected static final Logger LOG = LoggerFactory.getLogger(ConsistencyTest.class);
+
+    @Test
+    @Timeout(value = 120)
+    public void testSequentialConsistencyNormal() throws Exception {
+        long start = System.currentTimeMillis();
+        int numServers = 3;
+        Servers srvs = LaunchServers(numServers, 0, null);
+        String connectString = getConnectString(srvs);
+
+        ZooKeeper client = ClientBase.createZKClient(connectString);
+        String path = "/testSequentialConsistencyNormal";
+        AtomicLong logicClock = new AtomicLong(0);
+        String data = String.valueOf(logicClock.get());
+        client.create(path, data.getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+        byte[] data1 = client.getData(path, false, null);
+        assertEquals(data, new String(data1));
+        client.close();
+
+        int clientThreads = 20;
+        ConcurrentHashMap<Integer, List<Integer>> historyMap = new ConcurrentHashMap<>();
+        ExecutorService executorService = Executors.newFixedThreadPool(clientThreads);
+        for (int i = 0; i < clientThreads / 2; i++) {
+            executorService.execute(new WriteClientThread(i, connectString, path, logicClock));
+        }
+        for (int i = 0; i < clientThreads / 2; i++) {
+            executorService.execute(new ReadClientThread(i, connectString, path, logicClock, historyMap));
+        }
+        shutdownAndAwaitTermination(executorService);
+        for (Map.Entry<Integer, List<Integer>> entry : historyMap.entrySet()) {
+            List<Integer> list = entry.getValue();
+            LOG.info("clientId:{}, list:{}", entry.getKey(), list);
+            if (list.size() == 0) {
+               continue;
+            }
+            for (int i = 1; i < list.size(); i++) {
+                assertTrue(list.get(i) >= list.get(i - 1), String.format("value:%d should great than or equal value: %d",
+                            list.get(i), list.get(i - 1)));
+            }
+        }
+        // clean up
+        srvs.shutDownAllServers();
+        for (ZooKeeper zk : srvs.zk) {
+            zk.close();
+        }
+        LOG.info("spent time:{} ms", System.currentTimeMillis() - start);
+    }
+
+    void shutdownAndAwaitTermination(ExecutorService pool) {
+        pool.shutdown(); // Disable new tasks from being submitted
+        try {
+            // Wait a while for existing tasks to terminate
+            if (!pool.awaitTermination(30, TimeUnit.SECONDS)) {
+                pool.shutdownNow(); // Cancel currently executing tasks
+                // Wait a while for tasks to respond to being cancelled
+                if (!pool.awaitTermination(30, TimeUnit.SECONDS)) {
+                    LOG.warn("Pool did not terminate");
+                }
+            }
+        } catch (InterruptedException ie) {
+            // (Re-)Cancel if current thread also interrupted
+            pool.shutdownNow();
+            // Preserve interrupt status
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private String getConnectString(Servers srvs) {
+        StringBuilder sb = new StringBuilder();
+        for (int index = 0; index < srvs.clientPorts.length; index++) {
+            int clientPort = srvs.clientPorts[index];
+            if (index == 0) {
+                sb.append("127.0.0.1:" + clientPort);
+            } else {
+                sb.append(",127.0.0.1:" + clientPort);
+            }
+        }
+        return sb.toString();
+    }
+
+    static class ReadClientThread implements Runnable {
+        int clientId;
+        String connectString;
+        AtomicLong logicClock;
+        String path;
+        ConcurrentHashMap<Integer, List<Integer>> historyMap;
+
+        public ReadClientThread(int clientId, String connectString, String path,
+                AtomicLong logicClock,
+                ConcurrentHashMap<Integer, List<Integer>> historyMap) {
+            this.clientId = clientId;
+            this.connectString = connectString;
+            this.logicClock = logicClock;
+            this.path = path;
+            this.historyMap = historyMap;
+        }
+
+        @Override
+        public void run() {
+            ZooKeeper client = null;
+            try {
+                Thread.currentThread().setName("Read-Thread-" + clientId);
+                client = ClientBase.createZKClient(connectString);
+            } catch (Exception e) {
+                e.printStackTrace();
+                try {
+                    client.close();
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+                return;
+            }
+
+            try {
+                while (logicClock.get() <= 10000) {
+                    String data2Str = new String(client.getData(path, false, null));
+                    Integer data2 = Integer.parseInt(data2Str);
+                    LOG.info("ThreadName:{}, read data:{}", Thread.currentThread().getName(), data2Str);
+                    historyMap.computeIfAbsent(clientId, k -> new ArrayList<>()).add(data2);
+                    //assertTrue(data2 <= data1, String.format("data2: %d value should less than or equal data1: %d",
+                    // data2, data1));
+                }
+            } catch (InterruptedException | KeeperException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    client.close();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    static class WriteClientThread implements Runnable {
+        int clientId;
+        String connectString;
+        AtomicLong logicClock;
+        String path;
+
+        public WriteClientThread(int clientId, String connectString, String path, AtomicLong logicClock) {
+            this.clientId = clientId;
+            this.connectString = connectString;
+            this.logicClock = logicClock;
+            this.path = path;
+        }
+
+        @Override
+        public void run() {
+            ZooKeeper client = null;
+            try {
+                Thread.currentThread().setName("Write-Thread-" + clientId);
+                client = ClientBase.createZKClient(connectString);
+            } catch (Exception e) {
+                e.printStackTrace();
+                try {
+                    client.close();
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+                return;
+            }
+
+            try {
+                while (logicClock.get() <= 10000) {
+                    synchronized (logicClock) {
+                        String data1Str = String.valueOf(logicClock.incrementAndGet());
+                        client.setData(path, data1Str.getBytes(), -1);
+                        LOG.info("ThreadName:{}, write data:{}", Thread.currentThread().getName(), data1Str);
+                    }
+                }
+            } catch (InterruptedException | KeeperException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    client.close();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+    }
 
     // See ZOOKEEPER-3875
     @Test
@@ -150,7 +344,7 @@ public class ConsistencyTest extends QuorumPeerTestBase {
         assertTrue(allowedValues.contains(finalValues),
                 "Final values of /key0 and /key1 should be allowed under sequential consistency");
 
-        // Clean up
+        // clean up
         srvs.shutDownAllServers();
         for (ZooKeeper zk : srvs.zk) {
             zk.close();
@@ -332,12 +526,10 @@ public class ConsistencyTest extends QuorumPeerTestBase {
         outputBKey2 = new String(outputB[1], "UTF-8");
         outputCKey2 = new String(outputC[1], "UTF-8");
 
-        LOG.info("outputAKey1=" + outputAKey1);
-        LOG.info("outputBKey1=" + outputBKey1);
-        LOG.info("outputCKey1=" + outputCKey1);
-        LOG.info("outputAKey2=" + outputAKey2);
-        LOG.info("outputBKey2=" + outputBKey2);
-        LOG.info("outputCKey2=" + outputCKey2);
+        LOG.info(
+                "Output results outputAKey1={}, outputBKey1={}, outputCKey1={}; outputAKey2={}, outputBKey2={}, "
+                        + "outputCKey2={}",
+                outputAKey1, outputBKey1, outputCKey1, outputAKey2, outputBKey2, outputCKey2);
 
         assertEquals(outputAKey1, outputBKey1,
                 "Expecting the value of the 1st key on 1st and 2nd servers should be same");
@@ -347,6 +539,5 @@ public class ConsistencyTest extends QuorumPeerTestBase {
                 "Expecting the value of the 2nd key on 1st and 2nd servers should be same");
         assertEquals(outputBKey2, outputCKey2,
                 "Expecting the value of the 2nd key on 2nd and 3rd servers should be same");
-
     }
 }
