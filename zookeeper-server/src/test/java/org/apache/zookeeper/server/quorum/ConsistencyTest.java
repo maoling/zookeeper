@@ -539,5 +539,11 @@ public class ConsistencyTest extends QuorumPeerTestBase {
                 "Expecting the value of the 2nd key on 1st and 2nd servers should be same");
         assertEquals(outputBKey2, outputCKey2,
                 "Expecting the value of the 2nd key on 2nd and 3rd servers should be same");
+        // clean up
+        svrs.shutDownAllServers();
+        for (ZooKeeper zk : svrs.zk) {
+            zk.close();
+        }
+
     }
 }
